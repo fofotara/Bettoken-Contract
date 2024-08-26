@@ -191,6 +191,19 @@
 				"anonymous": false,
 				"inputs": [
 					{
+						"indexed": false,
+						"internalType": "address",
+						"name": "account",
+						"type": "address"
+					}
+				],
+				"name": "Paused",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
 						"indexed": true,
 						"internalType": "address",
 						"name": "buyer",
@@ -292,6 +305,19 @@
 				"anonymous": false,
 				"inputs": [
 					{
+						"indexed": false,
+						"internalType": "address",
+						"name": "account",
+						"type": "address"
+					}
+				],
+				"name": "Unpaused",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
 						"indexed": true,
 						"internalType": "address",
 						"name": "beneficiary",
@@ -310,6 +336,19 @@
 			{
 				"stateMutability": "payable",
 				"type": "fallback"
+			},
+			{
+				"inputs": [],
+				"name": "TIME_LOCK",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
 			},
 			{
 				"inputs": [],
@@ -457,6 +496,19 @@
 			},
 			{
 				"inputs": [],
+				"name": "lastActionTime",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
 				"name": "name",
 				"outputs": [
 					{
@@ -476,6 +528,26 @@
 						"internalType": "address",
 						"name": "",
 						"type": "address"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "pause",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "paused",
+				"outputs": [
+					{
+						"internalType": "bool",
+						"name": "",
+						"type": "bool"
 					}
 				],
 				"stateMutability": "view",
@@ -671,19 +743,6 @@
 				"type": "function"
 			},
 			{
-				"inputs": [
-					{
-						"internalType": "uint256",
-						"name": "amount",
-						"type": "uint256"
-					}
-				],
-				"name": "stakeTokens",
-				"outputs": [],
-				"stateMutability": "nonpayable",
-				"type": "function"
-			},
-			{
 				"inputs": [],
 				"name": "startPreSale",
 				"outputs": [],
@@ -790,22 +849,10 @@
 				"type": "function"
 			},
 			{
-				"inputs": [
-					{
-						"internalType": "address",
-						"name": "",
-						"type": "address"
-					}
-				],
-				"name": "vestingBalance",
-				"outputs": [
-					{
-						"internalType": "uint256",
-						"name": "",
-						"type": "uint256"
-					}
-				],
-				"stateMutability": "view",
+				"inputs": [],
+				"name": "unpause",
+				"outputs": [],
+				"stateMutability": "nonpayable",
 				"type": "function"
 			},
 			{
@@ -829,11 +876,31 @@
 						"type": "address"
 					}
 				],
-				"name": "vestingReleaseTime",
+				"name": "vestingSchedules",
 				"outputs": [
 					{
 						"internalType": "uint256",
-						"name": "",
+						"name": "totalAmount",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "releasedAmount",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "startTime",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "duration",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "interval",
 						"type": "uint256"
 					}
 				],
@@ -921,8 +988,14 @@
 				"Approval(address,address,uint256)": {
 					"details": "Emitted when the allowance of a `spender` for an `owner` is set by a call to {approve}. `value` is the new allowance."
 				},
+				"Paused(address)": {
+					"details": "Emitted when the pause is triggered by `account`."
+				},
 				"Transfer(address,address,uint256)": {
 					"details": "Emitted when `value` tokens are moved from one account (`from`) to another (`to`). Note that `value` may be zero."
+				},
+				"Unpaused(address)": {
+					"details": "Emitted when the pause is lifted by `account`."
 				}
 			},
 			"kind": "dev",
@@ -936,8 +1009,36 @@
 				"balanceOf(address)": {
 					"details": "See {IERC20-balanceOf}."
 				},
+				"buyTokens(uint256)": {
+					"details": "Allows users to buy tokens during the sale stages.",
+					"params": {
+						"usdAmount": "Token satın almak için gerekli USD miktarı."
+					}
+				},
+				"constructor": {
+					"details": "Constructor to initialize the Bettoken contract.",
+					"params": {
+						"_priceFeeds": "Chainlink fiyat beslemelerinin adreslerini içeren bir dizi."
+					}
+				},
 				"decimals()": {
 					"details": "Returns the number of decimals used to get its user representation. For example, if `decimals` equals `2`, a balance of `505` tokens should be displayed to a user as `5.05` (`505 / 10 ** 2`). Tokens usually opt for a value of 18, imitating the relationship between Ether and Wei. This is the default value returned by this function, unless it's overridden. NOTE: This information is only used for _display_ purposes: it in no way affects any of the arithmetic of the contract, including {IERC20-balanceOf} and {IERC20-transfer}."
+				},
+				"emergencyWithdraw(address,uint256)": {
+					"details": "Withdraws tokens from the contract in case of an emergency.",
+					"params": {
+						"amount": "Çekilecek token miktarı.",
+						"tokenAddress": "Çekilecek token'ın adresi."
+					}
+				},
+				"getLatestPrice()": {
+					"details": "Gets the latest price from multiple Chainlink oracles and calculates the average. The average price from the oracles. TR: Birden fazla Chainlink oracle'dan en son fiyatı alır ve ortalamasını hesaplar.",
+					"returns": {
+						"_0": "Oracle'lardan gelen ortalama fiyat."
+					}
+				},
+				"haltSales()": {
+					"details": "Halts all token sales and pauses the contract. TR: Tüm token satışlarını durdurur ve kontratı duraklatır."
 				},
 				"name()": {
 					"details": "Returns the name of the token."
@@ -945,8 +1046,23 @@
 				"owner()": {
 					"details": "Returns the address of the current owner."
 				},
+				"pause()": {
+					"details": "Pauses the contract. TR: Kontratı duraklatır."
+				},
+				"paused()": {
+					"details": "Returns true if the contract is paused, and false otherwise."
+				},
+				"releaseVestedTokens()": {
+					"details": "Releases the vested tokens for the caller. TR: Çağrıcı için vesting yapılmış tokenları serbest bırakır."
+				},
 				"renounceOwnership()": {
 					"details": "Leaves the contract without owner. It will not be possible to call `onlyOwner` functions. Can only be called by the current owner. NOTE: Renouncing ownership will leave the contract without an owner, thereby disabling any functionality that is only available to the owner."
+				},
+				"startPreSale()": {
+					"details": "Starts the pre-sale stage. TR: Ön satış aşamasını başlatır."
+				},
+				"startPrivateSale()": {
+					"details": "Starts the private sale stage. TR: Özel satış aşamasını başlatır."
 				},
 				"symbol()": {
 					"details": "Returns the symbol of the token, usually a shorter version of the name."
@@ -962,6 +1078,12 @@
 				},
 				"transferOwnership(address)": {
 					"details": "Transfers ownership of the contract to a new account (`newOwner`). Can only be called by the current owner."
+				},
+				"unpause()": {
+					"details": "Unpauses the contract. TR: Kontratı duraklatmadan çıkarır."
+				},
+				"withdrawFunds()": {
+					"details": "Withdraws funds from the contract. TR: Kontrattan fon çeker."
 				}
 			},
 			"version": 1
@@ -1010,6 +1132,14 @@
 			"urls": [
 				"bzz-raw://ea290300e0efc4d901244949dc4d877fd46e6c5e43dc2b26620e8efab3ab803f",
 				"dweb:/ipfs/QmcLLJppxKeJWqHxE2CUkcfhuRTgHSn8J4kijcLa5MYhSt"
+			]
+		},
+		"@openzeppelin/contracts/security/Pausable.sol": {
+			"keccak256": "0x0849d93b16c9940beb286a7864ed02724b248b93e0d80ef6355af5ef15c64773",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://4ddabb16009cd17eaca3143feadf450ac13e72919ebe2ca50e00f61cb78bc004",
+				"dweb:/ipfs/QmSPwPxX7d6TTWakN5jy5wsaGkS1y9TW8fuhGSraMkLk2B"
 			]
 		},
 		"@openzeppelin/contracts/security/ReentrancyGuard.sol": {
@@ -1061,11 +1191,11 @@
 			]
 		},
 		"contracts/bettoken.sol": {
-			"keccak256": "0xf6829ac0c533901cf734644756665cb474e6e58cc432110765506917752ec725",
+			"keccak256": "0xb1923a7f038cd69ba8a9ea098a690d2cdb79f9f4ec8d5d294290a8b16d73c839",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://b94e5cd00fde0b80c6abd9774daaa1851e9f52a1e8d03f4234446e92f8441aac",
-				"dweb:/ipfs/QmXUBgjLdH1wXQGcxThUcxBKkpBR3bT1DmxW3NeYfwrGJc"
+				"bzz-raw://741d0993cce48990c9280a8cdce245153820a8fd1ded1d89f37e3c982b2c34ba",
+				"dweb:/ipfs/QmNnCHnfTqXpMsr4fBpj1A3f5FHkT3ckkhsfnczWMq99X9"
 			]
 		}
 	},
