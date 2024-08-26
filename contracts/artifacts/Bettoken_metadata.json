@@ -8,9 +8,9 @@
 			{
 				"inputs": [
 					{
-						"internalType": "address",
-						"name": "_priceOracle",
-						"type": "address"
+						"internalType": "address[]",
+						"name": "_priceFeeds",
+						"type": "address[]"
 					}
 				],
 				"stateMutability": "nonpayable",
@@ -155,6 +155,25 @@
 					{
 						"indexed": true,
 						"internalType": "address",
+						"name": "owner",
+						"type": "address"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "amount",
+						"type": "uint256"
+					}
+				],
+				"name": "FundsWithdrawn",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": true,
+						"internalType": "address",
 						"name": "previousOwner",
 						"type": "address"
 					},
@@ -204,6 +223,19 @@
 					}
 				],
 				"name": "PrivateSale",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": false,
+						"internalType": "enum Bettoken.SaleStage",
+						"name": "newStage",
+						"type": "uint8"
+					}
+				],
+				"name": "StageChanged",
 				"type": "event"
 			},
 			{
@@ -386,6 +418,37 @@
 				"type": "function"
 			},
 			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "tokenAddress",
+						"type": "address"
+					},
+					{
+						"internalType": "uint256",
+						"name": "amount",
+						"type": "uint256"
+					}
+				],
+				"name": "emergencyWithdraw",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "getLatestPrice",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
 				"inputs": [],
 				"name": "haltSales",
 				"outputs": [],
@@ -484,11 +547,17 @@
 				"type": "function"
 			},
 			{
-				"inputs": [],
-				"name": "priceOracle",
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"name": "priceFeeds",
 				"outputs": [
 					{
-						"internalType": "contract IPriceOracle",
+						"internalType": "contract AggregatorV3Interface",
 						"name": "",
 						"type": "address"
 					}
@@ -919,6 +988,14 @@
 		"remappings": []
 	},
 	"sources": {
+		"@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol": {
+			"keccak256": "0xfe4e8bb4861bb3860ba890ab91a3b818ec66e5a8f544fb608cfcb73f433472cd",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://644cff84052e1e82b5bb502b2a46e8f142a62b0db4cd9b38200798ba8373c6f7",
+				"dweb:/ipfs/QmTa99QHrJBn3SXDizquPBUiTxVCNKQrHgaWJhuds5Sce2"
+			]
+		},
 		"@openzeppelin/contracts/access/Ownable.sol": {
 			"keccak256": "0xff6d0bb2e285473e5311d9d3caacb525ae3538a80758c10649a4d61029b017bb",
 			"license": "MIT",
@@ -984,11 +1061,11 @@
 			]
 		},
 		"contracts/bettoken.sol": {
-			"keccak256": "0xa11d4f3ebcee55619ba0afd0905e698f49f281dd6de69f286fc71384c62c3078",
+			"keccak256": "0xf6829ac0c533901cf734644756665cb474e6e58cc432110765506917752ec725",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://161ce4087e834a15d1506be2b43aff2b90772396e021082ee8a2e3c0f5f8b959",
-				"dweb:/ipfs/QmQ2KBmcvtcqLTf8JgK4VYKAv8ceTMFUdsvmKAogEfiQiT"
+				"bzz-raw://b94e5cd00fde0b80c6abd9774daaa1851e9f52a1e8d03f4234446e92f8441aac",
+				"dweb:/ipfs/QmXUBgjLdH1wXQGcxThUcxBKkpBR3bT1DmxW3NeYfwrGJc"
 			]
 		}
 	},

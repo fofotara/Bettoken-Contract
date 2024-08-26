@@ -1,3 +1,5 @@
+
+
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.6;
 
@@ -5,13 +7,9 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-
-interface IPriceOracle {
-    function getLatestPrice() external view returns (uint256);
-}
+import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 
 contract Bettoken is ERC20, Ownable, ReentrancyGuard {
-
     using SafeMath for uint256;
 
     uint256 public constant TOTAL_SUPPLY = 200_000_000 * 10 ** 18; // 200 million BETT with 18 decimals
@@ -40,34 +38,60 @@ contract Bettoken is ERC20, Ownable, ReentrancyGuard {
     uint256 public vestingDuration = 180 days; // 6 ay
     uint256 public stakeDuration = 365 days; // 1 yıl
 
-    IPriceOracle public priceOracle; // Price oracle contract address
+    AggregatorV3Interface[] public priceFeeds; // Birden fazla Chainlink Price Oracle
 
-    // Events
+    // Event Definitions
     event PrivateSale(address indexed buyer, uint256 amount);
     event PreSale(address indexed buyer, uint256 amount);
     event TokensStaked(address indexed staker, uint256 amount, uint256 releaseTime);
     event VestedTokensReleased(address indexed beneficiary, uint256 amount);
+    event StageChanged(SaleStage newStage);
+    event FundsWithdrawn(address indexed owner, uint256 amount);
 
-    constructor(address _priceOracle) ERC20("Bettoken", "BETT") Ownable(msg.sender) {
+    constructor(address[] memory _priceFeeds) ERC20("Bettoken", "BETT") Ownable(msg.sender) {
         _mint(address(this), TOTAL_SUPPLY);
-        priceOracle = IPriceOracle(_priceOracle); // Set the price oracle contract address
+        for (uint256 i = 0; i < _priceFeeds.length; i++) {
+            priceFeeds.push(AggregatorV3Interface(_priceFeeds[i]));
+        }
+    }
+
+    // Birden fazla oracle'dan fiyat ortalamasını alır
+    function getLatestPrice() public view returns (uint256) {
+        uint256 totalPrice = 0;
+        for (uint256 i = 0; i < priceFeeds.length; i++) {
+            (
+                ,
+                int price,
+                ,
+                ,
+            ) = priceFeeds[i].latestRoundData();
+            require(price > 0, "Invalid price data from oracle");
+            totalPrice = totalPrice.add(uint256(price));
+        }
+        return totalPrice.div(priceFeeds.length).mul(10 ** 10); // Ölçeklendirme
     }
 
     function startPrivateSale() external onlyOwner {
-        require(stage == SaleStage.NONE, "Private Sale has already started or concluded.");
+        require(stage == SaleStage.NONE, "Private Sale can only start from NONE stage.");
+        require(privateSaleSoldTokens == 0, "Private Sale tokens should be unsold at start.");
+        require(preSaleSoldTokens == 0, "Pre-Sale should not have started before Private Sale.");
+
         stage = SaleStage.PRIVATE;
+        emit StageChanged(stage);
     }
 
     function startPreSale() external onlyOwner {
-        require(stage == SaleStage.PRIVATE, "Private Sale should be concluded first.");
-        require(privateSaleSoldTokens == privateSaleTokens, "Private Sale target not reached.");
+        require(stage == SaleStage.PRIVATE, "Pre-Sale can only start after Private Sale.");
+        require(privateSaleSoldTokens == privateSaleTokens, "Private Sale must be completed before starting Pre-Sale.");
+        
         stage = SaleStage.PRESALE;
+        emit StageChanged(stage);
     }
 
     function buyTokens(uint256 usdAmount) external payable nonReentrant {
         require(stage != SaleStage.NONE, "No sale is active.");
 
-        uint256 latestPrice = priceOracle.getLatestPrice(); // Get the latest price from oracle
+        uint256 latestPrice = getLatestPrice();
         require(latestPrice > 0, "Invalid price from oracle");
 
         uint256 tokensToBuy;
@@ -120,7 +144,7 @@ contract Bettoken is ERC20, Ownable, ReentrancyGuard {
         return tokens;
     }
 
-    function stakeTokens(uint256 amount) external nonReentrant {
+    function stakeTokens(uint256 amount) external onlyOwner nonReentrant {
         require(amount > 0, "Amount must be greater than 0");
         require(balanceOf(msg.sender) >= amount, "Insufficient balance to stake");
 
@@ -137,7 +161,6 @@ contract Bettoken is ERC20, Ownable, ReentrancyGuard {
         uint256 amount = vestingBalance[msg.sender];
         require(amount > 0, "No vested tokens to release");
 
-        // Vesting bakiyesini ve serbest bırakma zamanını sıfırlama işlemi transferden önce yapılır
         vestingBalance[msg.sender] = 0;
         vestingReleaseTime[msg.sender] = 0;
 
@@ -150,10 +173,18 @@ contract Bettoken is ERC20, Ownable, ReentrancyGuard {
         require(privateSaleSoldTokens == privateSaleTokens || preSaleSoldTokens == preSaleTokens, 
                 "Sales targets not yet met.");
         stage = SaleStage.NONE;
+        emit StageChanged(stage);
+    }
+
+    function emergencyWithdraw(address tokenAddress, uint256 amount) external onlyOwner nonReentrant {
+        IERC20(tokenAddress).transfer(owner(), amount);
+        emit FundsWithdrawn(owner(), amount);
     }
 
     function withdrawFunds() external onlyOwner nonReentrant {
-        payable(owner()).transfer(address(this).balance);
+        uint256 amount = address(this).balance;
+        payable(owner()).transfer(amount);
+        emit FundsWithdrawn(owner(), amount);
     }
 
     fallback() external payable {

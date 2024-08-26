@@ -11,6 +11,11 @@
 						"internalType": "address",
 						"name": "_token",
 						"type": "address"
+					},
+					{
+						"internalType": "address",
+						"name": "_priceFeed",
+						"type": "address"
 					}
 				],
 				"stateMutability": "nonpayable",
@@ -61,6 +66,19 @@
 				"anonymous": false,
 				"inputs": [
 					{
+						"indexed": false,
+						"internalType": "string",
+						"name": "message",
+						"type": "string"
+					}
+				],
+				"name": "PriceFeedError",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
 						"indexed": true,
 						"internalType": "address",
 						"name": "user",
@@ -94,6 +112,38 @@
 				],
 				"name": "TokensReleased",
 				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": true,
+						"internalType": "address",
+						"name": "user",
+						"type": "address"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "amount",
+						"type": "uint256"
+					}
+				],
+				"name": "TransferFailed",
+				"type": "event"
+			},
+			{
+				"inputs": [],
+				"name": "getLatestPrice",
+				"outputs": [
+					{
+						"internalType": "int256",
+						"name": "",
+						"type": "int256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
 			},
 			{
 				"inputs": [
@@ -241,12 +291,28 @@
 		"remappings": []
 	},
 	"sources": {
+		"@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol": {
+			"keccak256": "0xfe4e8bb4861bb3860ba890ab91a3b818ec66e5a8f544fb608cfcb73f433472cd",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://644cff84052e1e82b5bb502b2a46e8f142a62b0db4cd9b38200798ba8373c6f7",
+				"dweb:/ipfs/QmTa99QHrJBn3SXDizquPBUiTxVCNKQrHgaWJhuds5Sce2"
+			]
+		},
 		"@openzeppelin/contracts/access/Ownable.sol": {
 			"keccak256": "0xff6d0bb2e285473e5311d9d3caacb525ae3538a80758c10649a4d61029b017bb",
 			"license": "MIT",
 			"urls": [
 				"bzz-raw://8ed324d3920bb545059d66ab97d43e43ee85fd3bd52e03e401f020afb0b120f6",
 				"dweb:/ipfs/QmfEckWLmZkDDcoWrkEvMWhms66xwTLff9DDhegYpvHo1a"
+			]
+		},
+		"@openzeppelin/contracts/security/ReentrancyGuard.sol": {
+			"keccak256": "0xa535a5df777d44e945dd24aa43a11e44b024140fc340ad0dfe42acf4002aade1",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://41319e7f621f2dc3733511332c4fd032f8e32ad2aa7fd6f665c19741d9941a34",
+				"dweb:/ipfs/QmcYR3bd862GD1Bc7jwrU9bGxrhUu5na1oP964bDCu2id1"
 			]
 		},
 		"@openzeppelin/contracts/token/ERC20/IERC20.sol": {
@@ -266,11 +332,11 @@
 			]
 		},
 		"contracts/TokenBridgeETH.sol": {
-			"keccak256": "0xd113bee8dba10b5d0e3ed06014167eafe9136540313a7df00aeb48c67fea254c",
+			"keccak256": "0xb6dc6ced9858b26d91d2e18e9fcf4e0994f4afd024c689b46925afe0a4a4c931",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://fc501e82f3ab3d0f3e2072854fd0638722bccdfe1d07f7084df544da6e5a7ff8",
-				"dweb:/ipfs/QmZP8wu8p73YpP14P2Ubin7DV7pgtPmkWk3qrVycW3mchW"
+				"bzz-raw://b06dabe8813119634ee60163bc54884ca17334f7fbe0bee1ccb21ce84b4a3c9f",
+				"dweb:/ipfs/QmY9vH5sgBjih1DzAWuQUKQLmnkABzyzxNGXJHjE6vYS7R"
 			]
 		}
 	},
