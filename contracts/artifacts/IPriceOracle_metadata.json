@@ -111,11 +111,11 @@
 			]
 		},
 		"contracts/bettoken.sol": {
-			"keccak256": "0xb4397a8a1c67cc1ff1d8f52a59d0f07c0106f1649f627157e89ef4dc5efd8eaa",
+			"keccak256": "0xa11d4f3ebcee55619ba0afd0905e698f49f281dd6de69f286fc71384c62c3078",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://413e6b06a0da858cfd3ae6505417f7451efa4f35d56ff674842cd374c22708c4",
-				"dweb:/ipfs/QmciH8PTMUPh3tuJAMQbCCJYprkEJKaNFmJybfsjnkDF7B"
+				"bzz-raw://161ce4087e834a15d1506be2b43aff2b90772396e021082ee8a2e3c0f5f8b959",
+				"dweb:/ipfs/QmQ2KBmcvtcqLTf8JgK4VYKAv8ceTMFUdsvmKAogEfiQiT"
 			]
 		}
 	},

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.6;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -9,7 +9,9 @@ contract TokenBridgeBSC is ERC20, Ownable {
 
     event TokensMinted(address indexed user, uint256 amount);
 
-    constructor() ERC20("Wrapped Token", "WTKN") {
+    constructor() ERC20("Wrapped Token", "WTKN") Ownable(msg.sender)  {
+        // ERC20 constructor'ına token adı ve sembolü gönderildi
+        // Ownable constructor'ı ise `msg.sender`'ı sahibi olarak atayacak şekilde çağırıldı
     }
 
     function mintTokens(address to, uint256 amount) external onlyOwner {
