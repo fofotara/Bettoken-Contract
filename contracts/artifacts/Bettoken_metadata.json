@@ -6,7 +6,13 @@
 	"output": {
 		"abi": [
 			{
-				"inputs": [],
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "_priceOracle",
+						"type": "address"
+					}
+				],
 				"stateMutability": "nonpayable",
 				"type": "constructor"
 			},
@@ -206,6 +212,31 @@
 					{
 						"indexed": true,
 						"internalType": "address",
+						"name": "staker",
+						"type": "address"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "amount",
+						"type": "uint256"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "releaseTime",
+						"type": "uint256"
+					}
+				],
+				"name": "TokensStaked",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": true,
+						"internalType": "address",
 						"name": "from",
 						"type": "address"
 					},
@@ -223,6 +254,25 @@
 					}
 				],
 				"name": "Transfer",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": true,
+						"internalType": "address",
+						"name": "beneficiary",
+						"type": "address"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "amount",
+						"type": "uint256"
+					}
+				],
+				"name": "VestedTokensReleased",
 				"type": "event"
 			},
 			{
@@ -435,6 +485,19 @@
 			},
 			{
 				"inputs": [],
+				"name": "priceOracle",
+				"outputs": [
+					{
+						"internalType": "contract IPriceOracle",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
 				"name": "privateSaleEndPrice",
 				"outputs": [
 					{
@@ -536,6 +599,19 @@
 					}
 				],
 				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "amount",
+						"type": "uint256"
+					}
+				],
+				"name": "stakeTokens",
+				"outputs": [],
+				"stateMutability": "nonpayable",
 				"type": "function"
 			},
 			{
@@ -908,11 +984,11 @@
 			]
 		},
 		"contracts/bettoken.sol": {
-			"keccak256": "0x2f7961c4ec13e611d3ca65db4ec82a73d2f387e11bb7900c3a31d364bf26f958",
+			"keccak256": "0xb4397a8a1c67cc1ff1d8f52a59d0f07c0106f1649f627157e89ef4dc5efd8eaa",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://8b04814a669ea34e528702f71bc9089be3b2c85d4878ffc27743aaa8689665fa",
-				"dweb:/ipfs/QmUvBCds51QFwy5HtHjPxLHBHnjgFRfrNoa47L3d38VKBY"
+				"bzz-raw://413e6b06a0da858cfd3ae6505417f7451efa4f35d56ff674842cd374c22708c4",
+				"dweb:/ipfs/QmciH8PTMUPh3tuJAMQbCCJYprkEJKaNFmJybfsjnkDF7B"
 			]
 		}
 	},
