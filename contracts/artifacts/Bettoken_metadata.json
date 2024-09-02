@@ -489,6 +489,19 @@
 			},
 			{
 				"inputs": [],
+				"name": "getTotalSupply",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "pure",
+				"type": "function"
+			},
+			{
+				"inputs": [],
 				"name": "haltSales",
 				"outputs": [],
 				"stateMutability": "nonpayable",
@@ -1037,6 +1050,9 @@
 						"_0": "Oracle'lardan gelen ortalama fiyat."
 					}
 				},
+				"getTotalSupply()": {
+					"details": "Returns the total supply of the token.  TR: Token'ın toplam arzını döner."
+				},
 				"haltSales()": {
 					"details": "Halts all token sales and pauses the contract. TR: Tüm token satışlarını durdurur ve kontratı duraklatır."
 				},
@@ -1191,11 +1207,11 @@
 			]
 		},
 		"contracts/bettoken.sol": {
-			"keccak256": "0xb1923a7f038cd69ba8a9ea098a690d2cdb79f9f4ec8d5d294290a8b16d73c839",
+			"keccak256": "0x337ab1ad6436ed393b29996ee5e06dd5f1734fbc98ec191cd6cc23598bc3416c",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://741d0993cce48990c9280a8cdce245153820a8fd1ded1d89f37e3c982b2c34ba",
-				"dweb:/ipfs/QmNnCHnfTqXpMsr4fBpj1A3f5FHkT3ckkhsfnczWMq99X9"
+				"bzz-raw://f9b4e80615c6519c9d05e2c53524a2dd17b20fd2e3c479c79dc3cb4e7ffc1138",
+				"dweb:/ipfs/QmY9UFw7N942cL6wCCnboX7GXpNzm3qKFiaZxZLoPVBCzY"
 			]
 		}
 	},

@@ -58,7 +58,6 @@ contract Bettoken is ERC20, Ownable, ReentrancyGuard, Pausable {
     event StageChanged(SaleStage newStage);
     event FundsWithdrawn(address indexed owner, uint256 amount);
 
-
     /**
      * @dev Constructor to initialize the Bettoken contract.
      * @param _priceFeeds An array of Chainlink price feed addresses.
@@ -95,6 +94,14 @@ contract Bettoken is ERC20, Ownable, ReentrancyGuard, Pausable {
         return totalPrice.div(priceFeeds.length).mul(10 ** 10);
     }
 
+    /**
+    * @dev Returns the total supply of the token.
+    * 
+    * TR: Token'ın toplam arzını döner.
+    */
+    function getTotalSupply() external pure returns (uint256) {
+        return TOTAL_SUPPLY;
+    }
     /**
      * @dev Starts the private sale stage.
      *
