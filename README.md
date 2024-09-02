@@ -148,6 +148,75 @@ Allows the owner to pause or unpause the contract.
 - **Pausable**: The contract can be paused by the owner to prevent unauthorized or unexpected actions.
 - **Non-reentrancy**: All critical functions are protected against reentrancy attacks.
 
+
+# Bettoken Smart Contract
+
+Bettoken, ERC20 standardına dayalı, özel ve ön satışları destekleyen bir akıllı sözleşmedir. Sözleşme, kullanıcıların token satın almasına, vesting (hakediş) planları oluşturmasına, stake etmelerine ve fonları çekmelerine olanak tanır. Ayrıca Chainlink oracle'ları aracılığıyla fiyat verilerini entegre eder.
+
+## Özellikler
+
+- **ERC20 Token Standardı**: Bettoken, OpenZeppelin tarafından sağlanan ERC20 standardına dayanır.
+- **Sahiplik Yönetimi (Ownable)**: OpenZeppelin'in Ownable modülü, yalnızca sahibin belirli işlemleri yapmasına izin verir.
+- **Güvenlik ve Reentrancy Koruması (ReentrancyGuard)**: Tekrar saldırılarını (reentrancy attacks) önlemek için ReentrancyGuard kullanılır.
+- **Pausable**: Sözleşme, gerektiğinde tüm işlemleri duraklatabilir (pause) veya duraklatmayı kaldırabilir (unpause).
+- **Vesting**: Tokenler belirli bir süre boyunca hakediş (vesting) planı kapsamında kilitlenebilir.
+- **Chainlink Oracle Entegrasyonu**: Fiyat verilerini Chainlink oracle'ları üzerinden alır ve bu verileri kullanarak satış fiyatlarını belirler.
+
+## ABI (Application Binary Interface)
+
+Sözleşmenin ABI'si aşağıdaki fonksiyonları içerir. Bu fonksiyonlar, sözleşmenin harici olarak çağrılabilir işlevlerini temsil eder.
+
+### OpenZeppelin ERC20 Fonksiyonları
+
+- **`name()`**: Token'ın adını döndürür.
+- **`symbol()`**: Token'ın sembolünü döndürür.
+- **`decimals()`**: Token'ın ondalık basamak sayısını döndürür.
+- **`totalSupply()`**: Toplam arzı döndürür.
+- **`balanceOf(address account)`**: Belirtilen adresin bakiyesini döndürür.
+- **`transfer(address recipient, uint256 amount)`**: Tokenları bir adrese transfer eder.
+- **`allowance(address owner, address spender)`**: Belirtilen harcama yetkisini döndürür.
+- **`approve(address spender, uint256 amount)`**: Belirtilen miktarda token harcamak için onay verir.
+- **`transferFrom(address sender, address recipient, uint256 amount)`**: Onaylanan tokenları bir adresten başka bir adrese transfer eder.
+
+### Ownable Fonksiyonları
+
+- **`owner()`**: Sözleşmenin sahibini döndürür.
+- **`transferOwnership(address newOwner)`**: Sahipliği yeni bir adrese devreder.
+
+### ReentrancyGuard Fonksiyonları
+
+- **`nonReentrant()`**: Tekrar saldırılarına karşı koruma sağlar. Bu işlev, diğer harici işlev çağrılarını engellemek için kullanılabilir.
+
+### Pausable Fonksiyonları
+
+- **`pause()`**: Sözleşmeyi duraklatır.
+- **`unpause()`**: Sözleşmeyi duraklatmadan çıkarır.
+
+### Bettoken Özel Fonksiyonları
+
+- **`constructor(address[] memory _priceFeeds)`**: Bettoken sözleşmesini başlatır ve Chainlink fiyat beslemelerini ayarlar.
+- **`getLatestPrice()`**: Birden fazla Chainlink oracle'dan en son fiyatı alır ve ortalamasını döndürür.
+- **`getTotalSupply()`**: Token'ın toplam arzını döndürür.
+- **`startPrivateSale()`**: Özel satış aşamasını başlatır.
+- **`startPreSale()`**: Ön satış aşamasını başlatır.
+- **`buyTokens(uint256 usdAmount)`**: Belirtilen USD miktarına göre token satın alır.
+- **`calculateTokens(uint256 usdAmount, uint256 startPrice, uint256 endPrice, uint256 soldTokens, uint256 totalTokens)`**: Satın alınabilecek token sayısını hesaplar.
+- **`createVestingSchedule(address beneficiary, uint256 amount, uint256 startTime, uint256 duration, uint256 interval)`**: Belirtilen adres için bir hakediş planı oluşturur.
+- **`releaseVestedTokens()`**: Çağrıcı için hakediş yapılmış tokenları serbest bırakır.
+- **`haltSales()`**: Tüm token satışlarını durdurur ve sözleşmeyi duraklatır.
+- **`emergencyWithdraw(address tokenAddress, uint256 amount)`**: Acil durumda belirtilen tokenları kontrattan çeker.
+- **`withdrawFunds()`**: Sözleşmeden fonları çeker.
+
+## Fonksiyonların Açıklamaları
+
+### getLatestPrice()
+- **Açıklama**: Birden fazla Chainlink oracle'dan en son fiyatı alır ve ortalamasını hesaplar.
+- **Dönüş Tipi**: `uint256`
+- **Örnek Kullanım**:
+  ```solidity
+  uint256 latestPrice = bettoken.getLatestPrice();
+
+
 ## License
 
 This project is licensed under the MIT License.
