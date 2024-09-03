@@ -8,6 +8,11 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 
+/**
+@title Bettoken
+@dev Bettoken 
+@custom:dev-run-script scripts/deploy_with_ethers.ts
+*/
 contract Bettoken is ERC20, Ownable, ReentrancyGuard, Pausable {
     using SafeMath for uint256;
 

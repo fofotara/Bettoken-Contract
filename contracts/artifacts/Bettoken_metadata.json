@@ -933,6 +933,8 @@
 			}
 		],
 		"devdoc": {
+			"custom:dev-run-script": "scripts/deploy_with_ethers.ts",
+			"details": "Bettoken ",
 			"errors": {
 				"ERC20InsufficientAllowance(address,uint256,uint256)": [
 					{
@@ -1102,6 +1104,7 @@
 					"details": "Withdraws funds from the contract. TR: Kontrattan fon çeker."
 				}
 			},
+			"title": "Bettoken",
 			"version": 1
 		},
 		"userdoc": {
@@ -1207,11 +1210,11 @@
 			]
 		},
 		"contracts/bettoken.sol": {
-			"keccak256": "0x337ab1ad6436ed393b29996ee5e06dd5f1734fbc98ec191cd6cc23598bc3416c",
+			"keccak256": "0xeea4c38348689f09f192aa3ed34f4a9ee14beb9a427b65ccb5c8505090a7d73f",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://f9b4e80615c6519c9d05e2c53524a2dd17b20fd2e3c479c79dc3cb4e7ffc1138",
-				"dweb:/ipfs/QmY9UFw7N942cL6wCCnboX7GXpNzm3qKFiaZxZLoPVBCzY"
+				"bzz-raw://2f46a1c42d8f75c947615d2eb08a8817ea3cc81c4a82e12ecf68e98411236d5e",
+				"dweb:/ipfs/QmRTLXawnee81SHFz3nri8gVRZGdF23uHFBV91hMpXPKwZ"
 			]
 		}
 	},
