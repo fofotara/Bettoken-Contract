@@ -339,6 +339,19 @@
 			},
 			{
 				"inputs": [],
+				"name": "BURN_ADDRESS",
+				"outputs": [
+					{
+						"internalType": "address",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
 				"name": "TIME_LOCK",
 				"outputs": [
 					{
@@ -428,6 +441,50 @@
 					}
 				],
 				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "amount",
+						"type": "uint256"
+					}
+				],
+				"name": "burn",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "account",
+						"type": "address"
+					},
+					{
+						"internalType": "uint256",
+						"name": "amount",
+						"type": "uint256"
+					}
+				],
+				"name": "burnFrom",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "amount",
+						"type": "uint256"
+					}
+				],
+				"name": "burnTokens",
+				"outputs": [],
+				"stateMutability": "nonpayable",
 				"type": "function"
 			},
 			{
@@ -1024,6 +1081,19 @@
 				"balanceOf(address)": {
 					"details": "See {IERC20-balanceOf}."
 				},
+				"burn(uint256)": {
+					"details": "Burns a specific amount of tokens.",
+					"params": {
+						"amount": "Yakılacak token miktarı."
+					}
+				},
+				"burnFrom(address,uint256)": {
+					"details": "Burns a specific amount of tokens from a specified address.",
+					"params": {
+						"account": "Tokenların yakılacağı adres.",
+						"amount": "Yakılacak token miktarı."
+					}
+				},
 				"buyTokens(uint256)": {
 					"details": "Allows users to buy tokens during the sale stages.",
 					"params": {
@@ -1117,7 +1187,7 @@
 		"compilationTarget": {
 			"contracts/bettoken.sol": "Bettoken"
 		},
-		"evmVersion": "cancun",
+		"evmVersion": "istanbul",
 		"libraries": {},
 		"metadata": {
 			"bytecodeHash": "ipfs"
@@ -1210,11 +1280,11 @@
 			]
 		},
 		"contracts/bettoken.sol": {
-			"keccak256": "0xeea4c38348689f09f192aa3ed34f4a9ee14beb9a427b65ccb5c8505090a7d73f",
+			"keccak256": "0xb5fcd579b7096b4856f981e7b837951659b6309ec0a95aff954335c018726ab4",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://2f46a1c42d8f75c947615d2eb08a8817ea3cc81c4a82e12ecf68e98411236d5e",
-				"dweb:/ipfs/QmRTLXawnee81SHFz3nri8gVRZGdF23uHFBV91hMpXPKwZ"
+				"bzz-raw://4015e4efaae73d8b63c2223426a5793268db4e7fcc783ebe635d4e0525339c2d",
+				"dweb:/ipfs/QmXvvJZtgkeKyt7jq3UQVsxqNFxNu78cBmpK71D586GjfT"
 			]
 		}
 	},

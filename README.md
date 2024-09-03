@@ -1,222 +1,192 @@
-
 # Bettoken Smart Contract
 
-This repository contains the `Bettoken` smart contract, a token contract built on the Ethereum blockchain. The contract is designed to handle private and pre-sale stages, with vesting and staking mechanisms for purchased tokens. It also utilizes Chainlink Price Feeds to ensure reliable token pricing during sales.
+## Overview
 
-## Contract Overview
-
-The `Bettoken` contract is an ERC20 token with additional features:
-
-- **Private Sale**: A stage where a fixed number of tokens are sold at a price that increases linearly.
-- **Pre-Sale**: A subsequent stage where tokens are sold at a higher price, also increasing linearly.
-- **Vesting**: Purchased tokens during the private sale are vested and gradually released to the buyer.
-- **Staking**: The contract allows for tokens to be staked with a fixed vesting schedule.
-- **Emergency Withdraw**: Allows the owner to withdraw tokens or funds in case of an emergency.
-- **Price Feed**: Chainlink Price Feeds are integrated to fetch the latest price data to determine token purchase rates.
-- **Time-lock Mechanism**: Critical functions such as starting sales and withdrawals are time-locked to ensure security.
+**Bettoken** is a decentralized ERC20 token built on the Ethereum blockchain. It leverages the OpenZeppelin library for security, access control, and standard token functionality. Bettoken is designed to support private sales, pre-sales, and vesting schedules, ensuring a structured and secure token distribution. The contract includes functions for token burning and pausing operations in case of emergencies.
 
 ## Features
 
-### 1. Sale Stages
+- **Total Supply:** A fixed total supply of 200,000,000 BETT tokens.
+- **Private Sale:** A stage where a limited number of tokens are available at a discounted price.
+- **Pre-Sale:** A subsequent stage where more tokens are available, typically at a higher price than the private sale.
+- **Vesting:** Tokens allocated to users can be released gradually over a specified period.
+- **Burning:** Tokens can be permanently removed from circulation.
+- **Pausing:** The contract can be paused during emergencies to prevent critical operations.
 
-- **Private Sale**: Tokens are sold at a starting price that gradually increases until the private sale token supply is depleted.
-- **Pre-Sale**: Once the private sale is complete, the pre-sale begins at a higher starting price with a similar linear price increase.
+## Contract Details
 
-### 2. Vesting
+### Prerequisites
 
-- Tokens purchased during the private sale are vested and released gradually according to the vesting schedule defined in the contract.
+To deploy and interact with this contract, you will need:
 
-### 3. Staking
+- **Solidity Version:** `^0.8.6`
+- **OpenZeppelin Contracts:** Import the standard library from OpenZeppelin.
+- **Chainlink Price Feeds:** For fetching the latest prices during token sales.
 
-- The contract supports staking of tokens, allowing users to lock their tokens for a set period.
+### Contract Inheritance
 
-### 4. Emergency Withdrawals
+The `Bettoken` contract inherits from the following OpenZeppelin contracts:
 
-- The contract includes emergency withdrawal mechanisms that allow the owner to withdraw tokens or funds if necessary, subject to a time lock.
+1. **ERC20:** Provides the standard ERC20 token functionality.
+2. **Ownable:** Ensures that only the owner of the contract can execute certain functions.
+3. **ReentrancyGuard:** Prevents reentrancy attacks by ensuring that certain functions cannot be re-entered while they are executing.
+4. **Pausable:** Allows the contract to be paused, stopping all operations temporarily.
 
-### 5. Chainlink Price Feeds
+### Contract Variables
 
-- Chainlink Price Feeds are used to fetch the latest price data, which is used to calculate the token price during sales.
+- `TOTAL_SUPPLY`: The total supply of BETT tokens.
+- `BURN_ADDRESS`: A predefined address (`0x000000000000000000000000000000000000dEaD`) used for burning tokens.
+- `privateSaleTarget`: The target amount of tokens to be sold during the private sale.
+- `preSaleTarget`: The target amount of tokens to be sold during the pre-sale.
+- `stage`: Tracks the current stage of the sale (Private Sale, Pre-Sale, or None).
+- `vestingSchedules`: A mapping to manage vesting schedules for different addresses.
+- `priceFeeds`: An array of Chainlink price feed interfaces used to get the latest token prices.
 
-### 6. Pausable Contract
+### Functions
 
-- The contract can be paused or unpaused by the owner to prevent or allow token purchases.
+#### 1. `constructor(address[] memory _priceFeeds)`
 
-## Functions
+Initializes the Bettoken contract, mints the total supply, and sets up price feeds.
 
-### Constructor
+- **_priceFeeds:** An array of addresses for Chainlink price feeds.
 
-```solidity
-constructor(address[] memory _priceFeeds) ERC20("Bettoken", "BETT") Ownable(msg.sender)
-```
+#### 2. `getLatestPrice() public view returns (uint256)`
 
-Initializes the contract with the provided Chainlink price feeds and mints the total token supply.
+Fetches and calculates the average price from multiple Chainlink oracles.
 
-### Start Private Sale
+- **Returns:** The average price from the oracles.
 
-```solidity
-function startPrivateSale() external onlyOwner
-```
+#### 3. `getTotalSupply() external pure returns (uint256)`
 
-Starts the private sale stage if all conditions are met.
+Returns the total supply of BETT tokens.
 
-### Start Pre-Sale
+- **Returns:** The total supply of tokens.
 
-```solidity
-function startPreSale() external onlyOwner
-```
+#### 4. `startPrivateSale() external onlyOwner`
 
-Starts the pre-sale stage after the private sale has been completed.
+Initiates the private sale phase. This function can only be called by the contract owner.
 
-### Buy Tokens
+#### 5. `startPreSale() external onlyOwner`
 
-```solidity
-function buyTokens(uint256 usdAmount) external payable nonReentrant whenNotPaused
-```
+Initiates the pre-sale phase after the private sale is completed. This function can only be called by the contract owner.
 
-Allows users to buy tokens during the active sale stage.
+#### 6. `buyTokens(uint256 usdAmount) external payable nonReentrant whenNotPaused`
 
-### Calculate Tokens
+Allows users to purchase tokens during the private sale or pre-sale phases.
 
-```solidity
-function calculateTokens(uint256 usdAmount, uint256 startPrice, uint256 endPrice, uint256 soldTokens, uint256 totalTokens) internal pure returns (uint256)
-```
+- **usdAmount:** The amount of USD to be converted into BETT tokens.
 
-Calculates the number of tokens that can be purchased based on the USD amount and current sale parameters.
+#### 7. `calculateTokens(uint256 usdAmount, uint256 startPrice, uint256 endPrice, uint256 soldTokens, uint256 totalTokens) internal pure returns (uint256)`
 
-### Create Vesting Schedule
+Calculates the number of tokens a user can purchase based on the amount of USD provided.
 
-```solidity
-function createVestingSchedule(address beneficiary, uint256 amount, uint256 startTime, uint256 duration, uint256 interval) internal
-```
+- **usdAmount:** The amount of USD used for purchase.
+- **startPrice:** The starting price of the token.
+- **endPrice:** The ending price of the token.
+- **soldTokens:** The number of tokens already sold.
+- **totalTokens:** The total number of tokens available for sale.
+- **Returns:** The number of tokens that can be purchased.
+
+#### 8. `createVestingSchedule(address beneficiary, uint256 amount, uint256 startTime, uint256 duration, uint256 interval) internal`
 
 Creates a vesting schedule for a beneficiary.
 
-### Release Vested Tokens
+- **beneficiary:** The address receiving the vested tokens.
+- **amount:** The total amount of tokens to be vested.
+- **startTime:** The time when vesting starts.
+- **duration:** The total duration of the vesting.
+- **interval:** The interval at which tokens are released.
 
-```solidity
-function releaseVestedTokens() external nonReentrant
-```
+#### 9. `releaseVestedTokens() external nonReentrant`
 
-Releases vested tokens to the caller based on their vesting schedule.
+Releases vested tokens for the caller based on their vesting schedule.
 
-### Halt Sales
+#### 10. `haltSales() external onlyOwner`
 
-```solidity
-function haltSales() external onlyOwner
-```
+Stops all token sales and pauses the contract.
 
-Halts all token sales and pauses the contract.
+#### 11. `emergencyWithdraw(address tokenAddress, uint256 amount) external onlyOwner nonReentrant`
 
-### Emergency Withdraw
+Withdraws tokens from the contract in case of an emergency.
 
-```solidity
-function emergencyWithdraw(address tokenAddress, uint256 amount) external onlyOwner nonReentrant
-```
+- **tokenAddress:** The address of the token to be withdrawn.
+- **amount:** The amount of tokens to withdraw.
 
-Allows the owner to withdraw tokens from the contract in case of an emergency.
+#### 12. `withdrawFunds() external onlyOwner nonReentrant`
 
-### Withdraw Funds
+Withdraws the contract's Ether balance to the owner's address.
 
-```solidity
-function withdrawFunds() external onlyOwner nonReentrant
-```
+#### 13. `burn(uint256 amount) external onlyOwner`
 
-Allows the owner to withdraw ETH from the contract.
+Burns a specific amount of tokens from the contract's balance.
 
-### Pause/Unpause Contract
+- **amount:** The amount of tokens to burn.
 
-```solidity
-function pause() external onlyOwner
-function unpause() external onlyOwner
-```
+#### 14. `burnFrom(address account, uint256 amount) external onlyOwner`
 
-Allows the owner to pause or unpause the contract.
+Burns a specific amount of tokens from a specified address.
 
-## Events
+- **account:** The address from which the tokens will be burned.
+- **amount:** The amount of tokens to burn.
 
-- `PrivateSale(address indexed buyer, uint256 amount)`: Emitted when a purchase is made during the private sale.
-- `PreSale(address indexed buyer, uint256 amount)`: Emitted when a purchase is made during the pre-sale.
-- `TokensStaked(address indexed staker, uint256 amount, uint256 releaseTime)`: Emitted when tokens are staked.
-- `VestedTokensReleased(address indexed beneficiary, uint256 amount)`: Emitted when vested tokens are released.
-- `StageChanged(SaleStage newStage)`: Emitted when the sale stage is changed.
-- `FundsWithdrawn(address indexed owner, uint256 amount)`: Emitted when funds are withdrawn from the contract.
+#### 15. `burnTokens(uint256 amount) external onlyOwner`
 
-## Security Features
+Transfers a specific amount of tokens to the `BURN_ADDRESS`, effectively burning them.
 
-- **Time-lock Mechanism**: Critical functions are subject to a time lock to prevent rapid changes that could compromise security.
-- **Pausable**: The contract can be paused by the owner to prevent unauthorized or unexpected actions.
-- **Non-reentrancy**: All critical functions are protected against reentrancy attacks.
+- **amount:** The amount of tokens to transfer to the burn address.
 
+#### 16. `pause() external onlyOwner`
 
-# Bettoken Smart Contract
+Pauses the contract, disabling critical functions.
 
-Bettoken, ERC20 standardına dayalı, özel ve ön satışları destekleyen bir akıllı sözleşmedir. Sözleşme, kullanıcıların token satın almasına, vesting (hakediş) planları oluşturmasına, stake etmelerine ve fonları çekmelerine olanak tanır. Ayrıca Chainlink oracle'ları aracılığıyla fiyat verilerini entegre eder.
+#### 17. `unpause() external onlyOwner`
 
-## Özellikler
+Unpauses the contract, re-enabling critical functions.
 
-- **ERC20 Token Standardı**: Bettoken, OpenZeppelin tarafından sağlanan ERC20 standardına dayanır.
-- **Sahiplik Yönetimi (Ownable)**: OpenZeppelin'in Ownable modülü, yalnızca sahibin belirli işlemleri yapmasına izin verir.
-- **Güvenlik ve Reentrancy Koruması (ReentrancyGuard)**: Tekrar saldırılarını (reentrancy attacks) önlemek için ReentrancyGuard kullanılır.
-- **Pausable**: Sözleşme, gerektiğinde tüm işlemleri duraklatabilir (pause) veya duraklatmayı kaldırabilir (unpause).
-- **Vesting**: Tokenler belirli bir süre boyunca hakediş (vesting) planı kapsamında kilitlenebilir.
-- **Chainlink Oracle Entegrasyonu**: Fiyat verilerini Chainlink oracle'ları üzerinden alır ve bu verileri kullanarak satış fiyatlarını belirler.
+#### 18. `fallback() external payable`
 
-## ABI (Application Binary Interface)
+Prevents direct Ether transfers to the contract.
 
-Sözleşmenin ABI'si aşağıdaki fonksiyonları içerir. Bu fonksiyonlar, sözleşmenin harici olarak çağrılabilir işlevlerini temsil eder.
+#### 19. `receive() external payable`
 
-### OpenZeppelin ERC20 Fonksiyonları
+Prevents direct Ether transfers to the contract.
 
-- **`name()`**: Token'ın adını döndürür.
-- **`symbol()`**: Token'ın sembolünü döndürür.
-- **`decimals()`**: Token'ın ondalık basamak sayısını döndürür.
-- **`totalSupply()`**: Toplam arzı döndürür.
-- **`balanceOf(address account)`**: Belirtilen adresin bakiyesini döndürür.
-- **`transfer(address recipient, uint256 amount)`**: Tokenları bir adrese transfer eder.
-- **`allowance(address owner, address spender)`**: Belirtilen harcama yetkisini döndürür.
-- **`approve(address spender, uint256 amount)`**: Belirtilen miktarda token harcamak için onay verir.
-- **`transferFrom(address sender, address recipient, uint256 amount)`**: Onaylanan tokenları bir adresten başka bir adrese transfer eder.
+## Usage
 
-### Ownable Fonksiyonları
+### Deployment
 
-- **`owner()`**: Sözleşmenin sahibini döndürür.
-- **`transferOwnership(address newOwner)`**: Sahipliği yeni bir adrese devreder.
+To deploy the contract, you can use a script like `deploy_with_ethers.ts` or manually deploy it using Remix, Truffle, or Hardhat. Ensure that you provide the necessary Chainlink price feed addresses during deployment.
 
-### ReentrancyGuard Fonksiyonları
+### Minting Tokens
 
-- **`nonReentrant()`**: Tekrar saldırılarına karşı koruma sağlar. Bu işlev, diğer harici işlev çağrılarını engellemek için kullanılabilir.
+During deployment, the total supply of tokens is minted to the contract itself. No additional minting is allowed after the deployment.
 
-### Pausable Fonksiyonları
+### Token Sales
 
-- **`pause()`**: Sözleşmeyi duraklatır.
-- **`unpause()`**: Sözleşmeyi duraklatmadan çıkarır.
+1. **Private Sale:** Use `startPrivateSale()` to begin the private sale phase.
+2. **Pre-Sale:** Use `startPreSale()` after completing the private sale.
 
-### Bettoken Özel Fonksiyonları
+Users can purchase tokens during these phases by calling the `buyTokens()` function with the appropriate amount of USD.
 
-- **`constructor(address[] memory _priceFeeds)`**: Bettoken sözleşmesini başlatır ve Chainlink fiyat beslemelerini ayarlar.
-- **`getLatestPrice()`**: Birden fazla Chainlink oracle'dan en son fiyatı alır ve ortalamasını döndürür.
-- **`getTotalSupply()`**: Token'ın toplam arzını döndürür.
-- **`startPrivateSale()`**: Özel satış aşamasını başlatır.
-- **`startPreSale()`**: Ön satış aşamasını başlatır.
-- **`buyTokens(uint256 usdAmount)`**: Belirtilen USD miktarına göre token satın alır.
-- **`calculateTokens(uint256 usdAmount, uint256 startPrice, uint256 endPrice, uint256 soldTokens, uint256 totalTokens)`**: Satın alınabilecek token sayısını hesaplar.
-- **`createVestingSchedule(address beneficiary, uint256 amount, uint256 startTime, uint256 duration, uint256 interval)`**: Belirtilen adres için bir hakediş planı oluşturur.
-- **`releaseVestedTokens()`**: Çağrıcı için hakediş yapılmış tokenları serbest bırakır.
-- **`haltSales()`**: Tüm token satışlarını durdurur ve sözleşmeyi duraklatır.
-- **`emergencyWithdraw(address tokenAddress, uint256 amount)`**: Acil durumda belirtilen tokenları kontrattan çeker.
-- **`withdrawFunds()`**: Sözleşmeden fonları çeker.
+### Vesting
 
-## Fonksiyonların Açıklamaları
+Vesting schedules are created automatically when tokens are sold during the private sale. The vesting schedule dictates when and how many tokens the user can claim.
 
-### getLatestPrice()
-- **Açıklama**: Birden fazla Chainlink oracle'dan en son fiyatı alır ve ortalamasını hesaplar.
-- **Dönüş Tipi**: `uint256`
-- **Örnek Kullanım**:
-  ```solidity
-  uint256 latestPrice = bettoken.getLatestPrice();
+### Burning Tokens
 
+To burn tokens, the owner can call either `burn()` or `burnFrom()` functions. Alternatively, tokens can be transferred to the `BURN_ADDRESS` using `burnTokens()`.
+
+### Emergency Functions
+
+In case of an emergency, the owner can withdraw tokens or Ether from the contract using `emergencyWithdraw()` or `withdrawFunds()`. The contract can also be paused or unpaused using `pause()` and `unpause()`.
+
+## Security Considerations
+
+- **Reentrancy:** The contract uses the `ReentrancyGuard` to protect against reentrancy attacks.
+- **Access Control:** The `Ownable` contract ensures that only the owner can execute critical functions.
+- **Pausing:** The contract can be paused to prevent operations during emergencies.
+- **Price Feeds:** The contract relies on Chainlink oracles for accurate price data during token sales.
 
 ## License
 
-This project is licensed under the MIT License.
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.

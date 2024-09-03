@@ -18,6 +18,9 @@ contract Bettoken is ERC20, Ownable, ReentrancyGuard, Pausable {
 
     uint256 public constant TOTAL_SUPPLY = 200_000_000 * 10 ** 18;
 
+    address public constant BURN_ADDRESS = 0x000000000000000000000000000000000000dEaD; // 
+
+
     // Private Sale variables
     uint256 public privateSaleTarget = 1_000_000 * 10 ** 18;
     uint256 public privateSaleTokens = 38_835_764 * 10 ** 18;
@@ -294,6 +297,35 @@ contract Bettoken is ERC20, Ownable, ReentrancyGuard, Pausable {
         lastActionTime = block.timestamp;
         emit FundsWithdrawn(owner(), amount);
     }
+
+    /**
+    * @dev Burns a specific amount of tokens.
+    * @param amount The amount of token to be burned.
+    *
+    * TR: Belirli bir miktarda token'ı yakar.
+    * @param amount Yakılacak token miktarı.
+    */
+    function burn(uint256 amount) external onlyOwner {
+        _burn(address(this), amount);
+    }
+
+    /**
+    * @dev Burns a specific amount of tokens from a specified address.
+    * @param account The address from which the tokens will be burned.
+    * @param amount The amount of token to be burned.
+    *
+    * TR: Belirli bir adresten belirli bir miktarda token yakar.
+    * @param account Tokenların yakılacağı adres.
+    * @param amount Yakılacak token miktarı.
+    */
+    function burnFrom(address account, uint256 amount) external onlyOwner {
+        _burn(account, amount);
+    }
+
+    function burnTokens(uint256 amount) external onlyOwner {
+        _transfer(address(this), BURN_ADDRESS, amount);
+    }
+
 
     /**
      * @dev Pauses the contract.
