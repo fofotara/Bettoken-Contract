@@ -20,6 +20,8 @@ contract Bettoken is ERC20, Ownable, ReentrancyGuard, Pausable {
 
     address public constant BURN_ADDRESS = 0x000000000000000000000000000000000000dEaD; // 
 
+    uint256 public constant BLOCK_TIME_LOCK = 900; // yaklaşık 3 saat (15 saniyelik blok süresi varsayarak)
+    uint256 public lastActionBlock;
 
     // Private Sale variables
     uint256 public privateSaleTarget = 1_000_000 * 10 ** 18;
@@ -74,6 +76,7 @@ contract Bettoken is ERC20, Ownable, ReentrancyGuard, Pausable {
      * @param _priceFeeds Chainlink fiyat beslemelerinin adreslerini içeren bir dizi.
      */
     constructor(address[] memory _priceFeeds) ERC20("Bettoken", "BETT") Ownable(msg.sender) {
+        lastActionBlock = block.number;
         _mint(address(this), TOTAL_SUPPLY);
         for (uint256 i = 0; i < _priceFeeds.length; i++) {
             priceFeeds.push(AggregatorV3Interface(_priceFeeds[i]));
@@ -110,19 +113,23 @@ contract Bettoken is ERC20, Ownable, ReentrancyGuard, Pausable {
     function getTotalSupply() external pure returns (uint256) {
         return TOTAL_SUPPLY;
     }
+
     /**
      * @dev Starts the private sale stage.
      *
      * TR: Özel satış aşamasını başlatır.
      */
+   
+
+
     function startPrivateSale() external onlyOwner {
         require(stage == SaleStage.NONE, "Private Sale can only start from NONE stage.");
         require(privateSaleSoldTokens == 0, "Private Sale tokens should be unsold at start.");
         require(preSaleSoldTokens == 0, "Pre-Sale should not have started before Private Sale.");
-        require(block.timestamp >= lastActionTime + TIME_LOCK, "Time lock in effect");
+        require(block.number >= lastActionBlock + BLOCK_TIME_LOCK, "Time lock in effect");
 
         stage = SaleStage.PRIVATE;
-        lastActionTime = block.timestamp;
+        lastActionBlock = block.number;
         emit StageChanged(stage);
     }
 
@@ -132,13 +139,13 @@ contract Bettoken is ERC20, Ownable, ReentrancyGuard, Pausable {
      * TR: Ön satış aşamasını başlatır.
      */
     function startPreSale() external onlyOwner {
-        require(stage == SaleStage.PRIVATE, "Pre-Sale can only start after Private Sale.");
-        require(privateSaleSoldTokens == privateSaleTokens, "Private Sale must be completed before starting Pre-Sale.");
-        require(block.timestamp >= lastActionTime + TIME_LOCK, "Time lock in effect");
-        
-        stage = SaleStage.PRESALE;
-        lastActionTime = block.timestamp;
-        emit StageChanged(stage);
+    require(stage == SaleStage.PRIVATE, "Pre-Sale can only start after Private Sale.");
+    require(privateSaleSoldTokens == privateSaleTokens, "Private Sale must be completed before starting Pre-Sale.");
+    require(block.number >= lastActionBlock + BLOCK_TIME_LOCK, "Time lock in effect");
+
+    stage = SaleStage.PRESALE;
+    lastActionBlock = block.number;
+    emit StageChanged(stage);
     }
 
     /**
@@ -160,6 +167,8 @@ contract Bettoken is ERC20, Ownable, ReentrancyGuard, Pausable {
             tokensToBuy = calculateTokens(usdAmount.mul(latestPrice).div(1 ether), privateSaleStartPrice, privateSaleEndPrice, privateSaleSoldTokens, privateSaleTokens);
             privateSaleSoldTokens = privateSaleSoldTokens.add(tokensToBuy);
             require(privateSaleSoldTokens <= privateSaleTokens, "Exceeds Private Sale token limit.");
+            
+            // Durum değişikliklerini dış çağrılardan önce yapın
             createVestingSchedule(msg.sender, tokensToBuy, block.timestamp.add(stakeDuration), vestingDuration, 30 days);
             emit PrivateSale(msg.sender, tokensToBuy);
         } else if (stage == SaleStage.PRESALE) {
@@ -168,10 +177,12 @@ contract Bettoken is ERC20, Ownable, ReentrancyGuard, Pausable {
             tokensToBuy = calculateTokens(usdAmount.mul(latestPrice).div(1 ether), preSaleStartPrice, preSaleEndPrice, preSaleSoldTokens, preSaleTokens);
             preSaleSoldTokens = preSaleSoldTokens.add(tokensToBuy);
             require(preSaleSoldTokens <= preSaleTokens, "Exceeds Pre-Sale token limit.");
+
             _transfer(address(this), msg.sender, tokensToBuy);
             emit PreSale(msg.sender, tokensToBuy);
         }
 
+        // Satış tamamlandığında kontratı duraklatın
         if ((stage == SaleStage.PRIVATE && privateSaleSoldTokens == privateSaleTokens) ||
             (stage == SaleStage.PRESALE && preSaleSoldTokens == preSaleTokens)) {
             _pause();
@@ -244,13 +255,16 @@ contract Bettoken is ERC20, Ownable, ReentrancyGuard, Pausable {
     function releaseVestedTokens() external nonReentrant {
         VestingSchedule storage schedule = vestingSchedules[msg.sender];
         require(block.timestamp >= schedule.startTime, "Vesting has not started yet");
-        
+
         uint256 vestedAmount = schedule.totalAmount.mul(block.timestamp.sub(schedule.startTime)).div(schedule.duration);
         uint256 releasableAmount = vestedAmount.sub(schedule.releasedAmount);
-        
+
         require(releasableAmount > 0, "No tokens available for release");
 
+        // Durum değişikliklerini dış çağrılardan önce yapın
         schedule.releasedAmount = schedule.releasedAmount.add(releasableAmount);
+        
+        // En son token transferini gerçekleştirin
         _transfer(address(this), msg.sender, releasableAmount);
 
         emit VestedTokensReleased(msg.sender, releasableAmount);
@@ -280,9 +294,12 @@ contract Bettoken is ERC20, Ownable, ReentrancyGuard, Pausable {
      */
     function emergencyWithdraw(address tokenAddress, uint256 amount) external onlyOwner nonReentrant {
         require(block.timestamp >= lastActionTime + TIME_LOCK, "Time lock in effect");
-        IERC20(tokenAddress).transfer(owner(), amount);
         lastActionTime = block.timestamp;
+        
         emit FundsWithdrawn(owner(), amount);
+        
+        bool success = IERC20(tokenAddress).transfer(owner(), amount);
+        require(success, "Token transfer failed");
     }
 
     /**
@@ -291,12 +308,23 @@ contract Bettoken is ERC20, Ownable, ReentrancyGuard, Pausable {
      * TR: Kontrattan fon çeker.
      */
     function withdrawFunds() external onlyOwner nonReentrant {
+        // Checks: Doğrulamalar
         require(block.timestamp >= lastActionTime + TIME_LOCK, "Time lock in effect");
-        uint256 amount = address(this).balance;
-        payable(owner()).transfer(amount);
+
+        // Effects: Durum değişkenlerini güncelleme
         lastActionTime = block.timestamp;
+        
+        // Çekilecek miktarı hesapla ve sakla
+        uint256 amount = address(this).balance;
+
+        // Önce olayı yayınla
         emit FundsWithdrawn(owner(), amount);
+
+        // Interactions: Harici çağrı
+        (bool success, ) = payable(owner()).call{value: amount}("");
+        require(success, "Transfer failed");
     }
+
 
     /**
     * @dev Burns a specific amount of tokens.
@@ -325,7 +353,6 @@ contract Bettoken is ERC20, Ownable, ReentrancyGuard, Pausable {
     function burnTokens(uint256 amount) external onlyOwner {
         _transfer(address(this), BURN_ADDRESS, amount);
     }
-
 
     /**
      * @dev Pauses the contract.

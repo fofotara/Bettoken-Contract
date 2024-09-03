@@ -339,6 +339,19 @@
 			},
 			{
 				"inputs": [],
+				"name": "BLOCK_TIME_LOCK",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
 				"name": "BURN_ADDRESS",
 				"outputs": [
 					{
@@ -562,6 +575,19 @@
 				"name": "haltSales",
 				"outputs": [],
 				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "lastActionBlock",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
 				"type": "function"
 			},
 			{
@@ -1280,11 +1306,11 @@
 			]
 		},
 		"contracts/bettoken.sol": {
-			"keccak256": "0xb5fcd579b7096b4856f981e7b837951659b6309ec0a95aff954335c018726ab4",
+			"keccak256": "0xaff3ea421f0831548d111529e5979a2ce29ad2cfb29960181ca6f766c54ccc59",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://4015e4efaae73d8b63c2223426a5793268db4e7fcc783ebe635d4e0525339c2d",
-				"dweb:/ipfs/QmXvvJZtgkeKyt7jq3UQVsxqNFxNu78cBmpK71D586GjfT"
+				"bzz-raw://a6e143c7142b7a7e264cc460ae4e172500bb1509ca93fa975cb2ac082b8d543f",
+				"dweb:/ipfs/QmejVs4w82wnNuawMDrgzoeJvEkyjvNxEhchZuVpTyX6Tq"
 			]
 		}
 	},
