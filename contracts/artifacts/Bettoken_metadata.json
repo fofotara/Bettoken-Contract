@@ -6,13 +6,7 @@
 	"output": {
 		"abi": [
 			{
-				"inputs": [
-					{
-						"internalType": "address[]",
-						"name": "_priceFeeds",
-						"type": "address[]"
-					}
-				],
+				"inputs": [],
 				"stateMutability": "nonpayable",
 				"type": "constructor"
 			},
@@ -130,6 +124,25 @@
 					{
 						"indexed": true,
 						"internalType": "address",
+						"name": "affiliate",
+						"type": "address"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "reward",
+						"type": "uint256"
+					}
+				],
+				"name": "AffiliateRewardPaid",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": true,
+						"internalType": "address",
 						"name": "owner",
 						"type": "address"
 					},
@@ -153,19 +166,13 @@
 				"anonymous": false,
 				"inputs": [
 					{
-						"indexed": true,
-						"internalType": "address",
-						"name": "owner",
-						"type": "address"
-					},
-					{
 						"indexed": false,
 						"internalType": "uint256",
 						"name": "amount",
 						"type": "uint256"
 					}
 				],
-				"name": "FundsWithdrawn",
+				"name": "ETHWithdrawn",
 				"type": "event"
 			},
 			{
@@ -216,39 +223,32 @@
 						"type": "uint256"
 					}
 				],
-				"name": "PreSale",
-				"type": "event"
-			},
-			{
-				"anonymous": false,
-				"inputs": [
-					{
-						"indexed": true,
-						"internalType": "address",
-						"name": "buyer",
-						"type": "address"
-					},
-					{
-						"indexed": false,
-						"internalType": "uint256",
-						"name": "amount",
-						"type": "uint256"
-					}
-				],
 				"name": "PrivateSale",
 				"type": "event"
 			},
 			{
 				"anonymous": false,
+				"inputs": [],
+				"name": "PrivateSaleEnded",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
 				"inputs": [
 					{
 						"indexed": false,
-						"internalType": "enum Bettoken.SaleStage",
-						"name": "newStage",
-						"type": "uint8"
+						"internalType": "uint256",
+						"name": "affiliateRewardPercentage",
+						"type": "uint256"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "startTime",
+						"type": "uint256"
 					}
 				],
-				"name": "StageChanged",
+				"name": "PrivateSaleStarted",
 				"type": "event"
 			},
 			{
@@ -274,6 +274,19 @@
 					}
 				],
 				"name": "TokensStaked",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "amount",
+						"type": "uint256"
+					}
+				],
+				"name": "TokensWithdrawn",
 				"type": "event"
 			},
 			{
@@ -334,12 +347,34 @@
 				"type": "event"
 			},
 			{
-				"stateMutability": "payable",
-				"type": "fallback"
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": true,
+						"internalType": "address",
+						"name": "_address",
+						"type": "address"
+					}
+				],
+				"name": "WhitelistedAddressAdded",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": true,
+						"internalType": "address",
+						"name": "_address",
+						"type": "address"
+					}
+				],
+				"name": "WhitelistedAddressRemoved",
+				"type": "event"
 			},
 			{
 				"inputs": [],
-				"name": "BLOCK_TIME_LOCK",
+				"name": "TOTAL_SUPPLY",
 				"outputs": [
 					{
 						"internalType": "uint256",
@@ -351,8 +386,45 @@
 				"type": "function"
 			},
 			{
-				"inputs": [],
-				"name": "BURN_ADDRESS",
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "user",
+						"type": "address"
+					},
+					{
+						"internalType": "string",
+						"name": "code",
+						"type": "string"
+					}
+				],
+				"name": "addAffiliate",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "_address",
+						"type": "address"
+					}
+				],
+				"name": "addToWhitelist",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "string",
+						"name": "",
+						"type": "string"
+					}
+				],
+				"name": "affiliateCodes",
 				"outputs": [
 					{
 						"internalType": "address",
@@ -365,20 +437,7 @@
 			},
 			{
 				"inputs": [],
-				"name": "TIME_LOCK",
-				"outputs": [
-					{
-						"internalType": "uint256",
-						"name": "",
-						"type": "uint256"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [],
-				"name": "TOTAL_SUPPLY",
+				"name": "affiliateRewardPercentage",
 				"outputs": [
 					{
 						"internalType": "uint256",
@@ -460,44 +519,18 @@
 				"inputs": [
 					{
 						"internalType": "uint256",
-						"name": "amount",
+						"name": "usdAmount",
 						"type": "uint256"
-					}
-				],
-				"name": "burn",
-				"outputs": [],
-				"stateMutability": "nonpayable",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "address",
-						"name": "account",
-						"type": "address"
 					},
 					{
-						"internalType": "uint256",
-						"name": "amount",
-						"type": "uint256"
+						"internalType": "string",
+						"name": "affiliateCode",
+						"type": "string"
 					}
 				],
-				"name": "burnFrom",
+				"name": "buyTokens",
 				"outputs": [],
-				"stateMutability": "nonpayable",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "uint256",
-						"name": "amount",
-						"type": "uint256"
-					}
-				],
-				"name": "burnTokens",
-				"outputs": [],
-				"stateMutability": "nonpayable",
+				"stateMutability": "payable",
 				"type": "function"
 			},
 			{
@@ -508,9 +541,15 @@
 						"type": "uint256"
 					}
 				],
-				"name": "buyTokens",
-				"outputs": [],
-				"stateMutability": "payable",
+				"name": "calculateTokens",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
 				"type": "function"
 			},
 			{
@@ -527,26 +566,15 @@
 				"type": "function"
 			},
 			{
-				"inputs": [
-					{
-						"internalType": "address",
-						"name": "tokenAddress",
-						"type": "address"
-					},
-					{
-						"internalType": "uint256",
-						"name": "amount",
-						"type": "uint256"
-					}
-				],
-				"name": "emergencyWithdraw",
+				"inputs": [],
+				"name": "endPrivateSale",
 				"outputs": [],
 				"stateMutability": "nonpayable",
 				"type": "function"
 			},
 			{
 				"inputs": [],
-				"name": "getLatestPrice",
+				"name": "getPrivateSaleStartTime",
 				"outputs": [
 					{
 						"internalType": "uint256",
@@ -559,27 +587,7 @@
 			},
 			{
 				"inputs": [],
-				"name": "getTotalSupply",
-				"outputs": [
-					{
-						"internalType": "uint256",
-						"name": "",
-						"type": "uint256"
-					}
-				],
-				"stateMutability": "pure",
-				"type": "function"
-			},
-			{
-				"inputs": [],
-				"name": "haltSales",
-				"outputs": [],
-				"stateMutability": "nonpayable",
-				"type": "function"
-			},
-			{
-				"inputs": [],
-				"name": "lastActionBlock",
+				"name": "maxTokensPerTransactionPrivateSale",
 				"outputs": [
 					{
 						"internalType": "uint256",
@@ -592,7 +600,33 @@
 			},
 			{
 				"inputs": [],
-				"name": "lastActionTime",
+				"name": "maxTokensPerUser",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "minTokensPerUserPrivateSale",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "minimumUsdAmount",
 				"outputs": [
 					{
 						"internalType": "uint256",
@@ -631,13 +665,6 @@
 			},
 			{
 				"inputs": [],
-				"name": "pause",
-				"outputs": [],
-				"stateMutability": "nonpayable",
-				"type": "function"
-			},
-			{
-				"inputs": [],
 				"name": "paused",
 				"outputs": [
 					{
@@ -651,83 +678,12 @@
 			},
 			{
 				"inputs": [],
-				"name": "preSaleEndPrice",
+				"name": "privateSaleActive",
 				"outputs": [
 					{
-						"internalType": "uint256",
+						"internalType": "bool",
 						"name": "",
-						"type": "uint256"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [],
-				"name": "preSaleSoldTokens",
-				"outputs": [
-					{
-						"internalType": "uint256",
-						"name": "",
-						"type": "uint256"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [],
-				"name": "preSaleStartPrice",
-				"outputs": [
-					{
-						"internalType": "uint256",
-						"name": "",
-						"type": "uint256"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [],
-				"name": "preSaleTarget",
-				"outputs": [
-					{
-						"internalType": "uint256",
-						"name": "",
-						"type": "uint256"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [],
-				"name": "preSaleTokens",
-				"outputs": [
-					{
-						"internalType": "uint256",
-						"name": "",
-						"type": "uint256"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "uint256",
-						"name": "",
-						"type": "uint256"
-					}
-				],
-				"name": "priceFeeds",
-				"outputs": [
-					{
-						"internalType": "contract AggregatorV3Interface",
-						"name": "",
-						"type": "address"
+						"type": "bool"
 					}
 				],
 				"stateMutability": "view",
@@ -774,7 +730,7 @@
 			},
 			{
 				"inputs": [],
-				"name": "privateSaleTarget",
+				"name": "privateSaleStartTime",
 				"outputs": [
 					{
 						"internalType": "uint256",
@@ -806,6 +762,19 @@
 				"type": "function"
 			},
 			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "_address",
+						"type": "address"
+					}
+				],
+				"name": "removeFromWhitelist",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
 				"inputs": [],
 				"name": "renounceOwnership",
 				"outputs": [],
@@ -813,16 +782,34 @@
 				"type": "function"
 			},
 			{
-				"inputs": [],
-				"name": "stage",
-				"outputs": [
+				"inputs": [
 					{
-						"internalType": "enum Bettoken.SaleStage",
-						"name": "",
-						"type": "uint8"
+						"internalType": "uint256",
+						"name": "_percentage",
+						"type": "uint256"
 					}
 				],
-				"stateMutability": "view",
+				"name": "setAffiliateRewardPercentage",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "_minTokensPrivateSale",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "_maxTokensPrivateSale",
+						"type": "uint256"
+					}
+				],
+				"name": "setPrivateSaleTokenLimits",
+				"outputs": [],
+				"stateMutability": "nonpayable",
 				"type": "function"
 			},
 			{
@@ -839,14 +826,13 @@
 				"type": "function"
 			},
 			{
-				"inputs": [],
-				"name": "startPreSale",
-				"outputs": [],
-				"stateMutability": "nonpayable",
-				"type": "function"
-			},
-			{
-				"inputs": [],
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "_affiliateRewardPercentage",
+						"type": "uint256"
+					}
+				],
 				"name": "startPrivateSale",
 				"outputs": [],
 				"stateMutability": "nonpayable",
@@ -945,15 +931,40 @@
 				"type": "function"
 			},
 			{
-				"inputs": [],
-				"name": "unpause",
-				"outputs": [],
-				"stateMutability": "nonpayable",
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"name": "userToAffiliateCode",
+				"outputs": [
+					{
+						"internalType": "string",
+						"name": "",
+						"type": "string"
+					}
+				],
+				"stateMutability": "view",
 				"type": "function"
 			},
 			{
 				"inputs": [],
 				"name": "vestingDuration",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "vestingInterval",
 				"outputs": [
 					{
 						"internalType": "uint256",
@@ -1004,20 +1015,40 @@
 				"type": "function"
 			},
 			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"name": "whitelist",
+				"outputs": [
+					{
+						"internalType": "bool",
+						"name": "",
+						"type": "bool"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
 				"inputs": [],
-				"name": "withdrawFunds",
+				"name": "withdrawETH",
 				"outputs": [],
 				"stateMutability": "nonpayable",
 				"type": "function"
 			},
 			{
-				"stateMutability": "payable",
-				"type": "receive"
+				"inputs": [],
+				"name": "withdrawTokens",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
 			}
 		],
 		"devdoc": {
-			"custom:dev-run-script": "scripts/deploy_with_ethers.ts",
-			"details": "Bettoken ",
 			"errors": {
 				"ERC20InsufficientAllowance(address,uint256,uint256)": [
 					{
@@ -1098,6 +1129,19 @@
 			},
 			"kind": "dev",
 			"methods": {
+				"addAffiliate(address,string)": {
+					"details": "Affiliate kodu atar. Bu fonksiyon sadece kontrat sahibi tarafından çağrılabilir.",
+					"params": {
+						"code": "Kullanıcıya atanacak affiliate kodu.",
+						"user": "Affiliate kodu atanacak kullanıcı."
+					}
+				},
+				"addToWhitelist(address)": {
+					"details": "Whitelist'e adres ekler. Bu fonksiyon sadece kontrat sahibi tarafından çağrılabilir.",
+					"params": {
+						"_address": "Whitelist'e eklenecek adres."
+					}
+				},
 				"allowance(address,address)": {
 					"details": "See {IERC20-allowance}."
 				},
@@ -1107,52 +1151,33 @@
 				"balanceOf(address)": {
 					"details": "See {IERC20-balanceOf}."
 				},
-				"burn(uint256)": {
-					"details": "Burns a specific amount of tokens.",
+				"buyTokens(uint256,string)": {
+					"details": "Token satın alma işlemi yapar. Private Sale sırasında whitelist'e ekli kullanıcılar satın alabilir.",
 					"params": {
-						"amount": "Yakılacak token miktarı."
+						"affiliateCode": "Kullanıcı tarafından girilen affiliate kodu (isteğe bağlı).",
+						"usdAmount": "Satın alınacak token miktarı (USD cinsinden)."
 					}
 				},
-				"burnFrom(address,uint256)": {
-					"details": "Burns a specific amount of tokens from a specified address.",
+				"calculateTokens(uint256)": {
+					"details": "USD miktarına göre satın alınabilecek token miktarını hesaplar.",
 					"params": {
-						"account": "Tokenların yakılacağı adres.",
-						"amount": "Yakılacak token miktarı."
-					}
-				},
-				"buyTokens(uint256)": {
-					"details": "Allows users to buy tokens during the sale stages.",
-					"params": {
-						"usdAmount": "Token satın almak için gerekli USD miktarı."
-					}
-				},
-				"constructor": {
-					"details": "Constructor to initialize the Bettoken contract.",
-					"params": {
-						"_priceFeeds": "Chainlink fiyat beslemelerinin adreslerini içeren bir dizi."
+						"usdAmount": "Satın alınacak token miktarının hesaplanacağı USD miktarı."
+					},
+					"returns": {
+						"_0": "Satın alınacak token miktarı."
 					}
 				},
 				"decimals()": {
 					"details": "Returns the number of decimals used to get its user representation. For example, if `decimals` equals `2`, a balance of `505` tokens should be displayed to a user as `5.05` (`505 / 10 ** 2`). Tokens usually opt for a value of 18, imitating the relationship between Ether and Wei. This is the default value returned by this function, unless it's overridden. NOTE: This information is only used for _display_ purposes: it in no way affects any of the arithmetic of the contract, including {IERC20-balanceOf} and {IERC20-transfer}."
 				},
-				"emergencyWithdraw(address,uint256)": {
-					"details": "Withdraws tokens from the contract in case of an emergency.",
-					"params": {
-						"amount": "Çekilecek token miktarı.",
-						"tokenAddress": "Çekilecek token'ın adresi."
-					}
+				"endPrivateSale()": {
+					"details": "Private Sale'i sonlandırır. Bu fonksiyon sadece kontrat sahibi tarafından çağrılabilir."
 				},
-				"getLatestPrice()": {
-					"details": "Gets the latest price from multiple Chainlink oracles and calculates the average. The average price from the oracles. TR: Birden fazla Chainlink oracle'dan en son fiyatı alır ve ortalamasını hesaplar.",
+				"getPrivateSaleStartTime()": {
+					"details": "Private Sale'in başlangıç zamanını döner.",
 					"returns": {
-						"_0": "Oracle'lardan gelen ortalama fiyat."
+						"_0": "Private Sale başlangıç zamanı (timestamp)."
 					}
-				},
-				"getTotalSupply()": {
-					"details": "Returns the total supply of the token.  TR: Token'ın toplam arzını döner."
-				},
-				"haltSales()": {
-					"details": "Halts all token sales and pauses the contract. TR: Tüm token satışlarını durdurur ve kontratı duraklatır."
 				},
 				"name()": {
 					"details": "Returns the name of the token."
@@ -1160,23 +1185,39 @@
 				"owner()": {
 					"details": "Returns the address of the current owner."
 				},
-				"pause()": {
-					"details": "Pauses the contract. TR: Kontratı duraklatır."
-				},
 				"paused()": {
 					"details": "Returns true if the contract is paused, and false otherwise."
 				},
 				"releaseVestedTokens()": {
-					"details": "Releases the vested tokens for the caller. TR: Çağrıcı için vesting yapılmış tokenları serbest bırakır."
+					"details": "Vesting yapılmış tokenları serbest bırakır."
+				},
+				"removeFromWhitelist(address)": {
+					"details": "Whitelist'ten adres çıkarır. Bu fonksiyon sadece kontrat sahibi tarafından çağrılabilir.",
+					"params": {
+						"_address": "Whitelist'ten çıkarılacak adres."
+					}
 				},
 				"renounceOwnership()": {
 					"details": "Leaves the contract without owner. It will not be possible to call `onlyOwner` functions. Can only be called by the current owner. NOTE: Renouncing ownership will leave the contract without an owner, thereby disabling any functionality that is only available to the owner."
 				},
-				"startPreSale()": {
-					"details": "Starts the pre-sale stage. TR: Ön satış aşamasını başlatır."
+				"setAffiliateRewardPercentage(uint256)": {
+					"details": "Affiliate ödül yüzdesini değiştirir. Bu fonksiyon sadece kontrat sahibi tarafından çağrılabilir.",
+					"params": {
+						"_percentage": "Yeni affiliate ödül yüzdesi."
+					}
 				},
-				"startPrivateSale()": {
-					"details": "Starts the private sale stage. TR: Özel satış aşamasını başlatır."
+				"setPrivateSaleTokenLimits(uint256,uint256)": {
+					"details": "Private Sale için minimum ve maksimum token limitlerini ayarlar. Bu fonksiyon sadece kontrat sahibi tarafından çağrılabilir.",
+					"params": {
+						"_maxTokensPrivateSale": "Private Sale sırasında bir işlemde alınabilecek en fazla token miktarı.",
+						"_minTokensPrivateSale": "Private Sale sırasında alınabilecek en az token miktarı."
+					}
+				},
+				"startPrivateSale(uint256)": {
+					"details": "Private Sale'i başlatır ve affiliate ödül yüzdesini belirler.",
+					"params": {
+						"_affiliateRewardPercentage": "Affiliate ödül yüzdesi."
+					}
 				},
 				"symbol()": {
 					"details": "Returns the symbol of the token, usually a shorter version of the name."
@@ -1193,14 +1234,13 @@
 				"transferOwnership(address)": {
 					"details": "Transfers ownership of the contract to a new account (`newOwner`). Can only be called by the current owner."
 				},
-				"unpause()": {
-					"details": "Unpauses the contract. TR: Kontratı duraklatmadan çıkarır."
+				"withdrawETH()": {
+					"details": "Kontratta bulunan ETH'yi çekmeye yarar. Bu fonksiyon sadece kontrat sahibi tarafından çağrılabilir."
 				},
-				"withdrawFunds()": {
-					"details": "Withdraws funds from the contract. TR: Kontrattan fon çeker."
+				"withdrawTokens()": {
+					"details": "Kontratta bulunan tokenları çekmeye yarar. Bu fonksiyon sadece kontrat sahibi tarafından çağrılabilir."
 				}
 			},
-			"title": "Bettoken",
 			"version": 1
 		},
 		"userdoc": {
@@ -1211,7 +1251,7 @@
 	},
 	"settings": {
 		"compilationTarget": {
-			"contracts/bettoken.sol": "Bettoken"
+			"contracts/bet.sol": "Bettoken"
 		},
 		"evmVersion": "istanbul",
 		"libraries": {},
@@ -1225,14 +1265,6 @@
 		"remappings": []
 	},
 	"sources": {
-		"@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol": {
-			"keccak256": "0xfe4e8bb4861bb3860ba890ab91a3b818ec66e5a8f544fb608cfcb73f433472cd",
-			"license": "MIT",
-			"urls": [
-				"bzz-raw://644cff84052e1e82b5bb502b2a46e8f142a62b0db4cd9b38200798ba8373c6f7",
-				"dweb:/ipfs/QmTa99QHrJBn3SXDizquPBUiTxVCNKQrHgaWJhuds5Sce2"
-			]
-		},
 		"@openzeppelin/contracts/access/Ownable.sol": {
 			"keccak256": "0xff6d0bb2e285473e5311d9d3caacb525ae3538a80758c10649a4d61029b017bb",
 			"license": "MIT",
@@ -1297,20 +1329,12 @@
 				"dweb:/ipfs/Qmax9WHBnVsZP46ZxEMNRQpLQnrdE4dK8LehML1Py8FowF"
 			]
 		},
-		"@openzeppelin/contracts/utils/math/SafeMath.sol": {
-			"keccak256": "0x58b21219689909c4f8339af00813760337f7e2e7f169a97fe49e2896dcfb3b9a",
+		"contracts/bet.sol": {
+			"keccak256": "0xf7b5a13aa15928c49c4f6ee4580fa9a44106420f7e0d0f9097f9e4761b310c45",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://ef8e012e946dec20e59f2d4446f4b44bb098f3fa8bac103b1b5112fff777447b",
-				"dweb:/ipfs/QmVTooKWcLkJ9W68yNX4MgdrbAKiAXwuRN9A7f4NkdcdtQ"
-			]
-		},
-		"contracts/bettoken.sol": {
-			"keccak256": "0xaff3ea421f0831548d111529e5979a2ce29ad2cfb29960181ca6f766c54ccc59",
-			"license": "MIT",
-			"urls": [
-				"bzz-raw://a6e143c7142b7a7e264cc460ae4e172500bb1509ca93fa975cb2ac082b8d543f",
-				"dweb:/ipfs/QmejVs4w82wnNuawMDrgzoeJvEkyjvNxEhchZuVpTyX6Tq"
+				"bzz-raw://82cda424ace8c75b6ec5b28598098e89de0bc10a58216c1971693887529effec",
+				"dweb:/ipfs/QmRYR7fJ7UNvuzt1hSwVhrqyfUXC3MfejK8dvJssi4jHwp"
 			]
 		}
 	},
