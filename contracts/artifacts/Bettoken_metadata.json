@@ -209,6 +209,25 @@
 			},
 			{
 				"anonymous": false,
+				"inputs": [],
+				"name": "PreSaleEnded",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "startTime",
+						"type": "uint256"
+					}
+				],
+				"name": "PreSaleStarted",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
 				"inputs": [
 					{
 						"indexed": true,
@@ -347,32 +366,6 @@
 				"type": "event"
 			},
 			{
-				"anonymous": false,
-				"inputs": [
-					{
-						"indexed": true,
-						"internalType": "address",
-						"name": "_address",
-						"type": "address"
-					}
-				],
-				"name": "WhitelistedAddressAdded",
-				"type": "event"
-			},
-			{
-				"anonymous": false,
-				"inputs": [
-					{
-						"indexed": true,
-						"internalType": "address",
-						"name": "_address",
-						"type": "address"
-					}
-				],
-				"name": "WhitelistedAddressRemoved",
-				"type": "event"
-			},
-			{
 				"inputs": [],
 				"name": "TOTAL_SUPPLY",
 				"outputs": [
@@ -380,56 +373,6 @@
 						"internalType": "uint256",
 						"name": "",
 						"type": "uint256"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "address",
-						"name": "user",
-						"type": "address"
-					},
-					{
-						"internalType": "string",
-						"name": "code",
-						"type": "string"
-					}
-				],
-				"name": "addAffiliate",
-				"outputs": [],
-				"stateMutability": "nonpayable",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "address",
-						"name": "_address",
-						"type": "address"
-					}
-				],
-				"name": "addToWhitelist",
-				"outputs": [],
-				"stateMutability": "nonpayable",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "string",
-						"name": "",
-						"type": "string"
-					}
-				],
-				"name": "affiliateCodes",
-				"outputs": [
-					{
-						"internalType": "address",
-						"name": "",
-						"type": "address"
 					}
 				],
 				"stateMutability": "view",
@@ -521,14 +464,9 @@
 						"internalType": "uint256",
 						"name": "usdAmount",
 						"type": "uint256"
-					},
-					{
-						"internalType": "string",
-						"name": "affiliateCode",
-						"type": "string"
 					}
 				],
-				"name": "buyTokens",
+				"name": "buyTokensPreSale",
 				"outputs": [],
 				"stateMutability": "payable",
 				"type": "function"
@@ -541,7 +479,39 @@
 						"type": "uint256"
 					}
 				],
-				"name": "calculateTokens",
+				"name": "buyTokensPrivateSale",
+				"outputs": [],
+				"stateMutability": "payable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "usdAmount",
+						"type": "uint256"
+					}
+				],
+				"name": "calculateTokensPreSale",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "usdAmount",
+						"type": "uint256"
+					}
+				],
+				"name": "calculateTokensPrivateSale",
 				"outputs": [
 					{
 						"internalType": "uint256",
@@ -567,6 +537,13 @@
 			},
 			{
 				"inputs": [],
+				"name": "endPreSale",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
 				"name": "endPrivateSale",
 				"outputs": [],
 				"stateMutability": "nonpayable",
@@ -574,7 +551,7 @@
 			},
 			{
 				"inputs": [],
-				"name": "getPrivateSaleStartTime",
+				"name": "maxPurchaseAmountPreSale",
 				"outputs": [
 					{
 						"internalType": "uint256",
@@ -587,46 +564,7 @@
 			},
 			{
 				"inputs": [],
-				"name": "maxTokensPerTransactionPrivateSale",
-				"outputs": [
-					{
-						"internalType": "uint256",
-						"name": "",
-						"type": "uint256"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [],
-				"name": "maxTokensPerUser",
-				"outputs": [
-					{
-						"internalType": "uint256",
-						"name": "",
-						"type": "uint256"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [],
-				"name": "minTokensPerUserPrivateSale",
-				"outputs": [
-					{
-						"internalType": "uint256",
-						"name": "",
-						"type": "uint256"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [],
-				"name": "minimumUsdAmount",
+				"name": "minPurchaseAmountPreSale",
 				"outputs": [
 					{
 						"internalType": "uint256",
@@ -671,6 +609,97 @@
 						"internalType": "bool",
 						"name": "",
 						"type": "bool"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "preSaleActive",
+				"outputs": [
+					{
+						"internalType": "bool",
+						"name": "",
+						"type": "bool"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "preSaleEndPrice",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "preSaleSoldTokens",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "preSaleStartPrice",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "preSaleStartTime",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "preSaleTargetFunds",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "preSaleTokens",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
 					}
 				],
 				"stateMutability": "view",
@@ -756,73 +785,16 @@
 			},
 			{
 				"inputs": [],
-				"name": "releaseVestedTokens",
-				"outputs": [],
-				"stateMutability": "nonpayable",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "address",
-						"name": "_address",
-						"type": "address"
-					}
-				],
-				"name": "removeFromWhitelist",
-				"outputs": [],
-				"stateMutability": "nonpayable",
-				"type": "function"
-			},
-			{
-				"inputs": [],
 				"name": "renounceOwnership",
 				"outputs": [],
 				"stateMutability": "nonpayable",
 				"type": "function"
 			},
 			{
-				"inputs": [
-					{
-						"internalType": "uint256",
-						"name": "_percentage",
-						"type": "uint256"
-					}
-				],
-				"name": "setAffiliateRewardPercentage",
-				"outputs": [],
-				"stateMutability": "nonpayable",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "uint256",
-						"name": "_minTokensPrivateSale",
-						"type": "uint256"
-					},
-					{
-						"internalType": "uint256",
-						"name": "_maxTokensPrivateSale",
-						"type": "uint256"
-					}
-				],
-				"name": "setPrivateSaleTokenLimits",
-				"outputs": [],
-				"stateMutability": "nonpayable",
-				"type": "function"
-			},
-			{
 				"inputs": [],
-				"name": "stakeDuration",
-				"outputs": [
-					{
-						"internalType": "uint256",
-						"name": "",
-						"type": "uint256"
-					}
-				],
-				"stateMutability": "view",
+				"name": "startPreSale",
+				"outputs": [],
+				"stateMutability": "nonpayable",
 				"type": "function"
 			},
 			{
@@ -938,51 +910,6 @@
 						"type": "address"
 					}
 				],
-				"name": "userToAffiliateCode",
-				"outputs": [
-					{
-						"internalType": "string",
-						"name": "",
-						"type": "string"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [],
-				"name": "vestingDuration",
-				"outputs": [
-					{
-						"internalType": "uint256",
-						"name": "",
-						"type": "uint256"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [],
-				"name": "vestingInterval",
-				"outputs": [
-					{
-						"internalType": "uint256",
-						"name": "",
-						"type": "uint256"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "address",
-						"name": "",
-						"type": "address"
-					}
-				],
 				"name": "vestingSchedules",
 				"outputs": [
 					{
@@ -1009,25 +936,6 @@
 						"internalType": "uint256",
 						"name": "interval",
 						"type": "uint256"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "address",
-						"name": "",
-						"type": "address"
-					}
-				],
-				"name": "whitelist",
-				"outputs": [
-					{
-						"internalType": "bool",
-						"name": "",
-						"type": "bool"
 					}
 				],
 				"stateMutability": "view",
@@ -1129,19 +1037,6 @@
 			},
 			"kind": "dev",
 			"methods": {
-				"addAffiliate(address,string)": {
-					"details": "Affiliate kodu atar. Bu fonksiyon sadece kontrat sahibi tarafından çağrılabilir.",
-					"params": {
-						"code": "Kullanıcıya atanacak affiliate kodu.",
-						"user": "Affiliate kodu atanacak kullanıcı."
-					}
-				},
-				"addToWhitelist(address)": {
-					"details": "Whitelist'e adres ekler. Bu fonksiyon sadece kontrat sahibi tarafından çağrılabilir.",
-					"params": {
-						"_address": "Whitelist'e eklenecek adres."
-					}
-				},
 				"allowance(address,address)": {
 					"details": "See {IERC20-allowance}."
 				},
@@ -1151,15 +1046,14 @@
 				"balanceOf(address)": {
 					"details": "See {IERC20-balanceOf}."
 				},
-				"buyTokens(uint256,string)": {
-					"details": "Token satın alma işlemi yapar. Private Sale sırasında whitelist'e ekli kullanıcılar satın alabilir.",
-					"params": {
-						"affiliateCode": "Kullanıcı tarafından girilen affiliate kodu (isteğe bağlı).",
-						"usdAmount": "Satın alınacak token miktarı (USD cinsinden)."
-					}
+				"buyTokensPreSale(uint256)": {
+					"details": "Pre-Sale sırasında token satın alımını gerçekleştirir."
 				},
-				"calculateTokens(uint256)": {
-					"details": "USD miktarına göre satın alınabilecek token miktarını hesaplar.",
+				"buyTokensPrivateSale(uint256)": {
+					"details": "Private Sale sırasında token satın alımını gerçekleştirir."
+				},
+				"calculateTokensPreSale(uint256)": {
+					"details": "Pre-Sale için token fiyatını USD cinsinden hesaplar.",
 					"params": {
 						"usdAmount": "Satın alınacak token miktarının hesaplanacağı USD miktarı."
 					},
@@ -1167,17 +1061,17 @@
 						"_0": "Satın alınacak token miktarı."
 					}
 				},
+				"calculateTokensPrivateSale(uint256)": {
+					"details": "Private Sale için token fiyatını USD cinsinden hesaplar."
+				},
 				"decimals()": {
 					"details": "Returns the number of decimals used to get its user representation. For example, if `decimals` equals `2`, a balance of `505` tokens should be displayed to a user as `5.05` (`505 / 10 ** 2`). Tokens usually opt for a value of 18, imitating the relationship between Ether and Wei. This is the default value returned by this function, unless it's overridden. NOTE: This information is only used for _display_ purposes: it in no way affects any of the arithmetic of the contract, including {IERC20-balanceOf} and {IERC20-transfer}."
 				},
-				"endPrivateSale()": {
-					"details": "Private Sale'i sonlandırır. Bu fonksiyon sadece kontrat sahibi tarafından çağrılabilir."
+				"endPreSale()": {
+					"details": "Pre-Sale'i sonlandırır."
 				},
-				"getPrivateSaleStartTime()": {
-					"details": "Private Sale'in başlangıç zamanını döner.",
-					"returns": {
-						"_0": "Private Sale başlangıç zamanı (timestamp)."
-					}
+				"endPrivateSale()": {
+					"details": "Private Sale'i sonlandırır."
 				},
 				"name()": {
 					"details": "Returns the name of the token."
@@ -1188,30 +1082,11 @@
 				"paused()": {
 					"details": "Returns true if the contract is paused, and false otherwise."
 				},
-				"releaseVestedTokens()": {
-					"details": "Vesting yapılmış tokenları serbest bırakır."
-				},
-				"removeFromWhitelist(address)": {
-					"details": "Whitelist'ten adres çıkarır. Bu fonksiyon sadece kontrat sahibi tarafından çağrılabilir.",
-					"params": {
-						"_address": "Whitelist'ten çıkarılacak adres."
-					}
-				},
 				"renounceOwnership()": {
 					"details": "Leaves the contract without owner. It will not be possible to call `onlyOwner` functions. Can only be called by the current owner. NOTE: Renouncing ownership will leave the contract without an owner, thereby disabling any functionality that is only available to the owner."
 				},
-				"setAffiliateRewardPercentage(uint256)": {
-					"details": "Affiliate ödül yüzdesini değiştirir. Bu fonksiyon sadece kontrat sahibi tarafından çağrılabilir.",
-					"params": {
-						"_percentage": "Yeni affiliate ödül yüzdesi."
-					}
-				},
-				"setPrivateSaleTokenLimits(uint256,uint256)": {
-					"details": "Private Sale için minimum ve maksimum token limitlerini ayarlar. Bu fonksiyon sadece kontrat sahibi tarafından çağrılabilir.",
-					"params": {
-						"_maxTokensPrivateSale": "Private Sale sırasında bir işlemde alınabilecek en fazla token miktarı.",
-						"_minTokensPrivateSale": "Private Sale sırasında alınabilecek en az token miktarı."
-					}
+				"startPreSale()": {
+					"details": "Pre-Sale'i başlatır."
 				},
 				"startPrivateSale(uint256)": {
 					"details": "Private Sale'i başlatır ve affiliate ödül yüzdesini belirler.",
@@ -1235,10 +1110,10 @@
 					"details": "Transfers ownership of the contract to a new account (`newOwner`). Can only be called by the current owner."
 				},
 				"withdrawETH()": {
-					"details": "Kontratta bulunan ETH'yi çekmeye yarar. Bu fonksiyon sadece kontrat sahibi tarafından çağrılabilir."
+					"details": "Kontratta bulunan ETH'yi çekmeye yarar."
 				},
 				"withdrawTokens()": {
-					"details": "Kontratta bulunan tokenları çekmeye yarar. Bu fonksiyon sadece kontrat sahibi tarafından çağrılabilir."
+					"details": "Kontratta bulunan tokenları çekmeye yarar."
 				}
 			},
 			"version": 1
@@ -1330,11 +1205,11 @@
 			]
 		},
 		"contracts/bet.sol": {
-			"keccak256": "0xf7b5a13aa15928c49c4f6ee4580fa9a44106420f7e0d0f9097f9e4761b310c45",
+			"keccak256": "0x74cc76bbbe2d5340516352af3d8d98012e3cd46189d4115341fff40bd0c222c4",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://82cda424ace8c75b6ec5b28598098e89de0bc10a58216c1971693887529effec",
-				"dweb:/ipfs/QmRYR7fJ7UNvuzt1hSwVhrqyfUXC3MfejK8dvJssi4jHwp"
+				"bzz-raw://397196ef4688d574feed1d6dd2975fc1b31a6ae5d36a97bb5cf262a9d94ad1e5",
+				"dweb:/ipfs/QmSxfsLHPFV9FYdtZA7NeJzd2FvqEo5orJaMgMmvdzuiZ4"
 			]
 		}
 	},
