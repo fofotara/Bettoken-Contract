@@ -4,210 +4,193 @@ pragma solidity ^0.8.6;
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/draft-ERC20Permit.sol";
 
-contract Bettoken is ERC20, Ownable, ReentrancyGuard, Pausable {
+contract Bettoken is ERC20, Ownable, ReentrancyGuard, Pausable, ERC20Permit {
+    using SafeMath for uint256;
 
-    // Total Supply tanımı
-    uint256 public constant TOTAL_SUPPLY = 200_000_000 * 10 ** 18;
+    uint256 public constant TOTAL_SUPPLY = 1_000_000_000 * 10 ** 18; // Toplam arz
 
-    // Private Sale değişkenleri
-    uint256 public privateSaleTokens = 38_835_764 * 10 ** 18;
-    uint256 public privateSaleStartPrice = 0.001 * 10 ** 18; // 0.001 USD başlangıç fiyatı
-    uint256 public privateSaleEndPrice = 0.0505 * 10 ** 18; // 0.0505 USD bitiş fiyatı
-    uint256 public privateSaleSoldTokens = 0;
-    uint256 public privateSaleStartTime; // Private sale başlangıç zamanı
-
-    // Affiliate ödül yüzdesi
-    uint256 public affiliateRewardPercentage; // Affiliate ödül yüzdesi (%5 olarak varsayılan)
-
-    // Pre-Sale değişkenleri
-    uint256 public preSaleTokens = 161_164_236 * 10 ** 18; // Pre-Sale sırasında satılacak BETT miktarı
-    uint256 public preSaleTargetFunds = 19_000_000 * 10 ** 18; // Hedeflenen fon miktarı (19 milyon USD)
-    uint256 public preSaleStartPrice = 0.0505 * 10 ** 18; // Pre-Sale başlangıç fiyatı
-    uint256 public preSaleEndPrice = 0.1 * 10 ** 18; // Pre-Sale bitiş fiyatı
-    uint256 public preSaleSoldTokens = 0;
-    uint256 public preSaleStartTime; // Pre-Sale başlangıç zamanı
-    bool public preSaleActive = false; // Pre-Sale aktif mi?
-
-    // Pre-Sale satın alma sınırları
-    uint256 public minPurchaseAmountPreSale = 100 * 10 ** 18; // Minimum satın alma miktarı (100 USD)
-    uint256 public maxPurchaseAmountPreSale = 3000 * 10 ** 18; // Maksimum satın alma miktarı (3000 USD)
-
-    // Vesting Planı yapısı
-    struct VestingSchedule {
-        uint256 totalAmount;
-        uint256 releasedAmount;
-        uint256 startTime;
-        uint256 duration;
-        uint256 interval;
+    struct TokenAllocation {
+        uint256 marketAllocation;
+        uint256 teamAllocation;
+        uint256 presaleAllocation;
+        uint256 airdropAllocation;
+        uint256 burnAllocation;
     }
 
-    mapping(address => VestingSchedule) public vestingSchedules;
+    TokenAllocation public tokenAllocation = TokenAllocation({
+        marketAllocation: 500_000_000 * 10 ** 18,   // %50 Piyasa için
+        teamAllocation: 100_000_000 * 10 ** 18,     // %10 Takım için (kilitli)
+        presaleAllocation: 200_000_000 * 10 ** 18,  // %20 Ön Satış
+        airdropAllocation: 50_000_000 * 10 ** 18,   // %5 Airdrop ve Bonuslar
+        burnAllocation: 150_000_000 * 10 ** 18      // %15 Yakılacak Tokenlar
+    });
 
-    // Satış aşaması değişkeni
-    bool public privateSaleActive = false; // Private Sale aktif mi değil mi
+    struct SaleInfo {
+        uint256 soldTokens;
+        uint256 startPrice;
+        uint256 endPrice;
+        uint256 totalTokens;
+    }
 
-    // Etkinlikler
-    event PrivateSaleStarted(uint256 affiliateRewardPercentage, uint256 startTime);
-    event PrivateSale(address indexed buyer, uint256 amount);
+    SaleInfo public privateSaleInfo = SaleInfo({
+        soldTokens: 0,
+        startPrice: 0.001 * 10 ** 18,
+        endPrice: 0.0505 * 10 ** 18,
+        totalTokens: 38_835_764 * 10 ** 18
+    });
+
+    SaleInfo public preSaleInfo = SaleInfo({
+        soldTokens: 0,
+        startPrice: 0.0505 * 10 ** 18,
+        endPrice: 0.1 * 10 ** 18,
+        totalTokens: 161_164_236 * 10 ** 18
+    });
+
+    uint256 public minPurchaseAmount = 100 * 10 ** 18;
+    uint256 public maxPurchaseAmount = 3000 * 10 ** 18;
+
+    // White List Mapping
+    mapping(address => bool) public whiteList;
+
+    // Affiliate Sistemleri
+    mapping(address => string) public affiliateCodes; // Her kullanıcıya ait affiliate kodu
+    mapping(string => address) public affiliateOwners; // Her affiliate kodu için adres
+
+    uint8 public affiliateRewardPercentage = 5;  // %5 varsayılan affiliate ödülü
+
+    // Event Definitions
+    event PrivateSale(address indexed buyer, uint256 amount, string affiliateCode);
+    event PreSale(address indexed buyer, uint256 amount, string affiliateCode);
     event AffiliateRewardPaid(address indexed affiliate, uint256 reward);
-    event TokensStaked(address indexed staker, uint256 amount, uint256 releaseTime);
-    event VestedTokensReleased(address indexed beneficiary, uint256 amount);
-    event PrivateSaleEnded();
-    event PreSaleStarted(uint256 startTime);
-    event PreSaleEnded();
-    event TokensWithdrawn(uint256 amount);
-    event ETHWithdrawn(uint256 amount);
+    event AffiliateAdded(address indexed affiliate, string code);
+    event AffiliateRemoved(address indexed affiliate, string code);
+    event WhiteListAdded(address indexed account);
+    event WhiteListRemoved(address indexed account);
 
-    // Yapıcı fonksiyon
-    constructor() ERC20("Bettoken", "BETT") Ownable(msg.sender) {
-        _mint(address(this), TOTAL_SUPPLY);
+    constructor() 
+        ERC20("Bettoken", "BETT")
+        ERC20Permit("Bettoken")
+        Ownable(msg.sender)
+    {
+        _mint(address(this), TOTAL_SUPPLY); // Tüm tokenları kontrata mint et
+    }
+
+    // --- White List Fonksiyonları ---
+
+    /**
+     * @dev Adresi whitelist'e ekler
+     */
+    function addToWhiteList(address account) external onlyOwner {
+        require(!whiteList[account], "Already whitelisted");
+        whiteList[account] = true;
+        emit WhiteListAdded(account);
     }
 
     /**
-     * @dev Private Sale'i başlatır ve affiliate ödül yüzdesini belirler.
-     * @param _affiliateRewardPercentage Affiliate ödül yüzdesi.
+     * @dev Adresi whitelist'ten çıkarır
      */
-    function startPrivateSale(uint256 _affiliateRewardPercentage) external onlyOwner {
-        require(!privateSaleActive, "Private Sale already active");
-        require(_affiliateRewardPercentage > 0 && _affiliateRewardPercentage <= 100, "Invalid percentage");
+    function removeFromWhiteList(address account) external onlyOwner {
+        require(whiteList[account], "Not whitelisted");
+        whiteList[account] = false;
+        emit WhiteListRemoved(account);
+    }
 
-        affiliateRewardPercentage = _affiliateRewardPercentage; // Affiliate yüzdesini ayarla
-        privateSaleActive = true; // Private Sale aktif
-        privateSaleStartTime = block.timestamp; // Başlangıç zamanını kaydet
+    // --- Affiliate Sistem Fonksiyonları ---
 
-        emit PrivateSaleStarted(affiliateRewardPercentage, privateSaleStartTime); // Satış başlama olayını tetikle
+    /**
+     * @dev Affiliate adresi ve kodu ekler
+     */
+    function addAffiliate(address affiliate, string memory code) external onlyOwner {
+        require(bytes(affiliateCodes[affiliate]).length == 0, "Affiliate exists");
+        require(affiliateOwners[code] == address(0), "Code in use");
+
+        affiliateCodes[affiliate] = code;
+        affiliateOwners[code] = affiliate;
+        emit AffiliateAdded(affiliate, code);
     }
 
     /**
-     * @dev Private Sale sırasında token satın alımını gerçekleştirir.
+     * @dev Affiliate adresi ve kodu siler
      */
-    function buyTokensPrivateSale(uint256 usdAmount) external payable nonReentrant whenNotPaused {
-        require(privateSaleActive, "Private Sale is not active");
-        require(usdAmount >= 50 * 10 ** 18, "Minimum USD amount required is 50 USD");
+    function removeAffiliate(address affiliate) external onlyOwner {
+        string memory code = affiliateCodes[affiliate]; // burada memory kullanıyoruz
+        require(bytes(code).length > 0, "No affiliate");
+
+        delete affiliateOwners[code];
+        delete affiliateCodes[affiliate];
+        emit AffiliateRemoved(affiliate, code);
+    }
+
+    // --- Private Sale Fonksiyonu ---
+    function buyTokensPrivateSale(uint256 usdAmount, string memory affiliateCode) external payable nonReentrant whenNotPaused {
+        require(whiteList[msg.sender], "Not whitelisted");
+        require(privateSaleInfo.soldTokens < privateSaleInfo.totalTokens, "Sold out");
+
         uint256 tokensToBuy = calculateTokensPrivateSale(usdAmount);
-        require(tokensToBuy <= 1000 * 10 ** 18, "Exceeds maximum token purchase limit");
-
-        privateSaleSoldTokens += tokensToBuy;
-
-        if (privateSaleSoldTokens >= privateSaleTokens) {
-            privateSaleActive = false;
-            emit PrivateSaleEnded();
-        }
-
-        createVestingSchedule(msg.sender, tokensToBuy, block.timestamp + 365 days, 180 days, 30 days);
-    }
-
-
-    /**
-     * @dev Pre-Sale'i başlatır.
-     */
-    function startPreSale() external onlyOwner {
-        require(!preSaleActive, "Pre-Sale is already active");
-        preSaleActive = true;
-        preSaleStartTime = block.timestamp;
-        emit PreSaleStarted(preSaleStartTime);
-    }
-
-    /**
-     * @dev Pre-Sale sırasında token satın alımını gerçekleştirir.
-     */
-    function buyTokensPreSale(uint256 usdAmount) external payable nonReentrant whenNotPaused {
-        require(preSaleActive, "Pre-Sale is not active");
-        require(usdAmount >= minPurchaseAmountPreSale, "Amount is below minimum purchase limit");
-        require(usdAmount <= maxPurchaseAmountPreSale, "Amount exceeds maximum purchase limit");
-
-        uint256 tokensToBuy = calculateTokensPreSale(usdAmount);
-        require(preSaleSoldTokens + tokensToBuy <= preSaleTokens, "Exceeds Pre-Sale token limit");
-
-        preSaleSoldTokens += tokensToBuy;
-
-        if (preSaleSoldTokens >= preSaleTokens) {
-            preSaleActive = false;
-            emit PreSaleEnded();
-        }
+        privateSaleInfo.soldTokens = privateSaleInfo.soldTokens.add(tokensToBuy);
+        require(privateSaleInfo.soldTokens <= privateSaleInfo.totalTokens, "Exceeds limit");
 
         _transfer(address(this), msg.sender, tokensToBuy);
+
+        if (bytes(affiliateCode).length > 0) {
+            address affiliate = affiliateOwners[affiliateCode]; // burada memory kullanıyoruz
+            require(affiliate != address(0), "Invalid code");
+
+            uint256 affiliateReward = tokensToBuy.mul(affiliateRewardPercentage).div(100);
+            _transfer(address(this), affiliate, affiliateReward);
+            emit AffiliateRewardPaid(affiliate, affiliateReward);
+        }
+
+        emit PrivateSale(msg.sender, tokensToBuy, affiliateCode);
     }
 
-    /**
-     * @dev Pre-Sale için token fiyatını USD cinsinden hesaplar.
-     * @param usdAmount Satın alınacak token miktarının hesaplanacağı USD miktarı.
-     * @return Satın alınacak token miktarı.
-     */
-    function calculateTokensPreSale(uint256 usdAmount) public view returns (uint256) {
-        uint256 currentPrice = preSaleStartPrice + (
-            (preSaleEndPrice - preSaleStartPrice) * preSaleSoldTokens / preSaleTokens
-        );
-        uint256 tokens = usdAmount / currentPrice;
-        return tokens;
+    // --- Pre-Sale Fonksiyonu ---
+    function buyTokensPreSale(uint256 usdAmount, string memory affiliateCode) external payable nonReentrant whenNotPaused {
+        require(preSaleInfo.soldTokens < preSaleInfo.totalTokens, "Sold out");
+        require(usdAmount >= minPurchaseAmount && usdAmount <= maxPurchaseAmount, "Amount out of range");
+
+        uint256 tokensToBuy = calculateTokensPreSale(usdAmount);
+        preSaleInfo.soldTokens = preSaleInfo.soldTokens.add(tokensToBuy);
+        require(preSaleInfo.soldTokens <= preSaleInfo.totalTokens, "Exceeds limit");
+
+        _transfer(address(this), msg.sender, tokensToBuy);
+
+        if (bytes(affiliateCode).length > 0) {
+            address affiliate = affiliateOwners[affiliateCode]; // burada memory kullanıyoruz
+            require(affiliate != address(0), "Invalid code");
+
+            uint256 affiliateReward = tokensToBuy.mul(affiliateRewardPercentage).div(100);
+            _transfer(address(this), affiliate, affiliateReward);
+            emit AffiliateRewardPaid(affiliate, affiliateReward);
+        }
+
+        emit PreSale(msg.sender, tokensToBuy, affiliateCode);
     }
 
-    /**
-     * @dev Private Sale için token fiyatını USD cinsinden hesaplar.
-     */
+    // --- Token Hesaplama Fonksiyonları ---
     function calculateTokensPrivateSale(uint256 usdAmount) public view returns (uint256) {
-        uint256 currentPrice = privateSaleStartPrice + (
-            (privateSaleEndPrice - privateSaleStartPrice) * privateSaleSoldTokens / privateSaleTokens
+        uint256 tokenRange = privateSaleInfo.endPrice.sub(privateSaleInfo.startPrice);
+        uint256 currentPrice = privateSaleInfo.startPrice.add(
+            tokenRange.mul(privateSaleInfo.soldTokens).div(privateSaleInfo.totalTokens)
         );
-        uint256 tokens = usdAmount / currentPrice;
+        require(currentPrice >= privateSaleInfo.startPrice && currentPrice <= privateSaleInfo.endPrice, "Invalid price");
+
+        uint256 tokens = usdAmount.div(currentPrice);
         return tokens;
     }
 
-    /**
-     * @dev Vesting programı oluşturur.
-     */
-    function createVestingSchedule(
-        address beneficiary,
-        uint256 amount,
-        uint256 startTime,
-        uint256 duration,
-        uint256 interval
-    ) internal {
-        VestingSchedule storage schedule = vestingSchedules[beneficiary];
-        schedule.totalAmount += amount;
-        schedule.startTime = startTime;
-        schedule.duration = duration;
-        schedule.interval = interval;
-    }
+    function calculateTokensPreSale(uint256 usdAmount) public view returns (uint256) {
+        uint256 tokenRange = preSaleInfo.endPrice.sub(preSaleInfo.startPrice);
+        uint256 currentPrice = preSaleInfo.startPrice.add(
+            tokenRange.mul(preSaleInfo.soldTokens).div(preSaleInfo.totalTokens)
+        );
+        require(currentPrice >= preSaleInfo.startPrice && currentPrice <= preSaleInfo.endPrice, "Invalid price");
 
-    /**
-     * @dev Private Sale'i sonlandırır.
-     */
-    function endPrivateSale() external onlyOwner {
-        require(privateSaleActive, "Private Sale is not active");
-        privateSaleActive = false;
-        emit PrivateSaleEnded();
-    }
-
-    /**
-     * @dev Pre-Sale'i sonlandırır.
-     */
-    function endPreSale() external onlyOwner {
-        require(preSaleActive, "Pre-Sale is not active");
-        preSaleActive = false;
-        emit PreSaleEnded();
-    }
-
-    /**
-     * @dev Kontratta bulunan tokenları çekmeye yarar.
-     */
-    function withdrawTokens() external onlyOwner {
-        uint256 balance = balanceOf(address(this));
-        require(balance > 0, "No tokens to withdraw");
-        _transfer(address(this), owner(), balance);
-        emit TokensWithdrawn(balance);
-    }
-
-    /**
-     * @dev Kontratta bulunan ETH'yi çekmeye yarar.
-     */
-    function withdrawETH() external onlyOwner {
-        uint256 balance = address(this).balance;
-        require(balance > 0, "No ETH to withdraw");
-        (bool success, ) = owner().call{value: balance}("");
-        require(success, "Transfer failed");
-        emit ETHWithdrawn(balance);
+        uint256 tokens = usdAmount.div(currentPrice);
+        return tokens;
     }
 }
