@@ -664,6 +664,19 @@
 				"inputs": [
 					{
 						"internalType": "address",
+						"name": "_address",
+						"type": "address"
+					}
+				],
+				"name": "addToWhitelist",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
 						"name": "",
 						"type": "address"
 					}
@@ -706,6 +719,25 @@
 						"internalType": "uint8",
 						"name": "",
 						"type": "uint8"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"name": "affiliateRewards",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
 					}
 				],
 				"stateMutability": "view",
@@ -896,9 +928,19 @@
 						"internalType": "uint256",
 						"name": "amount",
 						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "batchSize",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "batchIndex",
+						"type": "uint256"
 					}
 				],
-				"name": "distributeAirdrop",
+				"name": "distributeAirdropBatch",
 				"outputs": [],
 				"stateMutability": "nonpayable",
 				"type": "function"
@@ -965,6 +1007,51 @@
 				"name": "endSale",
 				"outputs": [],
 				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "affiliate",
+						"type": "address"
+					}
+				],
+				"name": "getAffiliateReward",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "getTotalPreSaleSoldTokens",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "getTotalPrivateSaleSoldTokens",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
 				"type": "function"
 			},
 			{
@@ -1187,6 +1274,19 @@
 				"type": "function"
 			},
 			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "_address",
+						"type": "address"
+					}
+				],
+				"name": "removeFromWhitelist",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
 				"inputs": [],
 				"name": "renounceOwnership",
 				"outputs": [],
@@ -1199,9 +1299,19 @@
 						"internalType": "address[]",
 						"name": "recipients",
 						"type": "address[]"
+					},
+					{
+						"internalType": "uint256",
+						"name": "batchSize",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "batchIndex",
+						"type": "uint256"
 					}
 				],
-				"name": "setAirdropEligible",
+				"name": "setAirdropEligibleBatch",
 				"outputs": [],
 				"stateMutability": "nonpayable",
 				"type": "function"
@@ -1395,6 +1505,25 @@
 				"type": "function"
 			},
 			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"name": "whitelist",
+				"outputs": [
+					{
+						"internalType": "bool",
+						"name": "",
+						"type": "bool"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
 				"inputs": [],
 				"name": "withdrawFunds",
 				"outputs": [],
@@ -1548,18 +1677,8 @@
 				"decimals()": {
 					"details": "Returns the number of decimals used to get its user representation. For example, if `decimals` equals `2`, a balance of `505` tokens should be displayed to a user as `5.05` (`505 / 10 ** 2`). Tokens usually opt for a value of 18, imitating the relationship between Ether and Wei. This is the default value returned by this function, unless it's overridden. NOTE: This information is only used for _display_ purposes: it in no way affects any of the arithmetic of the contract, including {IERC20-balanceOf} and {IERC20-transfer}."
 				},
-				"distributeAirdrop(address[],uint256)": {
-					"details": "Airdrop ile tokenları dağıtır.",
-					"params": {
-						"amount": "Her alıcıya dağıtılacak token miktarı.",
-						"recipients": "Airdrop yapılacak adresler."
-					}
-				},
 				"eip712Domain()": {
 					"details": "See {IERC-5267}."
-				},
-				"endAirdrop()": {
-					"details": "Airdrop süresini bitirir."
 				},
 				"name()": {
 					"details": "Returns the name of the token."
@@ -1578,19 +1697,6 @@
 				},
 				"renounceOwnership()": {
 					"details": "Leaves the contract without owner. It will not be possible to call `onlyOwner` functions. Can only be called by the current owner. NOTE: Renouncing ownership will leave the contract without an owner, thereby disabling any functionality that is only available to the owner."
-				},
-				"setAirdropEligible(address[])": {
-					"details": "Airdrop için uygun adresleri belirler.",
-					"params": {
-						"recipients": "Airdrop yapılacak adresler."
-					}
-				},
-				"startAirdrop(uint256,uint256)": {
-					"details": "Airdrop süresini başlatır ve bitiş zamanını ayarlar.",
-					"params": {
-						"_endTime": "Airdrop bitiş zamanı.",
-						"_startTime": "Airdrop başlangıç zamanı."
-					}
 				},
 				"symbol()": {
 					"details": "Returns the symbol of the token, usually a shorter version of the name."
@@ -1793,14 +1899,6 @@
 				"dweb:/ipfs/QmQyRpyPRL5SQuAgj6SHmbir3foX65FJjbVTTQrA2EFg6L"
 			]
 		},
-		"@openzeppelin/contracts/utils/math/SafeMath.sol": {
-			"keccak256": "0x58b21219689909c4f8339af00813760337f7e2e7f169a97fe49e2896dcfb3b9a",
-			"license": "MIT",
-			"urls": [
-				"bzz-raw://ef8e012e946dec20e59f2d4446f4b44bb098f3fa8bac103b1b5112fff777447b",
-				"dweb:/ipfs/QmVTooKWcLkJ9W68yNX4MgdrbAKiAXwuRN9A7f4NkdcdtQ"
-			]
-		},
 		"@openzeppelin/contracts/utils/math/SignedMath.sol": {
 			"keccak256": "0x5f7e4076e175393767754387c962926577f1660dd9b810187b9002407656be72",
 			"license": "MIT",
@@ -1810,11 +1908,11 @@
 			]
 		},
 		"contracts/bettoken.sol": {
-			"keccak256": "0xdd07aefc0e62e5cbef1e201c26d9ef1cd7cd0cdf31d3b433527394c8ecb77760",
+			"keccak256": "0x8f641112cd68adaed4c09d74c248061275661a2725affc0a9c7fb3416f2082a0",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://c96b50bfd0d47af2f243dec17be5569f27f897ecd92491f683083d6c5c4a202b",
-				"dweb:/ipfs/QmRkL3zQAyS9fzGejEGXApKLo28SmhjyTeydmQKU8knDYE"
+				"bzz-raw://8155a6b9cff20fc1e0eb49b22513c286117a25e4ceededb3630dd8767e4b61e1",
+				"dweb:/ipfs/QmaPCUrRLbtBRqmgoDfMrFLL3hKR1h8M8JbB4rY5txZLPu"
 			]
 		}
 	},

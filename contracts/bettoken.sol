@@ -4,7 +4,6 @@ pragma solidity ^0.8.6;
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/draft-ERC20Permit.sol";
 
@@ -12,7 +11,6 @@ import "@openzeppelin/contracts/token/ERC20/extensions/draft-ERC20Permit.sol";
 @title Bettoken
 */
 contract Bettoken is ERC20, Ownable, ReentrancyGuard, Pausable, ERC20Permit {
-    using SafeMath for uint256;
 
     uint256 public constant TOTAL_SUPPLY = 1_000_000_000 * 10 ** 18;
 
@@ -65,7 +63,13 @@ contract Bettoken is ERC20, Ownable, ReentrancyGuard, Pausable, ERC20Permit {
     // Affiliate system
     mapping(address => string) public affiliateCodes;
     mapping(string => address) public affiliateOwners;
-    uint8 public affiliateRewardPercentage = 5;  // Veri tipini uint8 yaptık
+    uint8 public affiliateRewardPercentage = 5;
+
+    // Affiliate ödüllerini takip eden mapping
+    mapping(address => uint256) public affiliateRewards;
+
+    // Whitelist mapping
+    mapping(address => bool) public whitelist;
 
     // Event Definitions
     event PrivateSale(address indexed buyer, uint256 amount, string affiliateCode);
@@ -103,13 +107,24 @@ contract Bettoken is ERC20, Ownable, ReentrancyGuard, Pausable, ERC20Permit {
         emit TokensBurned(BURN_ALLOCATION);
     }
 
+    // --- Whitelist Yönetimi ---
+
+    function addToWhitelist(address _address) external onlyOwner {
+        whitelist[_address] = true;
+    }
+
+    function removeFromWhitelist(address _address) external onlyOwner {
+        whitelist[_address] = false;
+    }
+
     // --- Private Sale Fonksiyonları ---
 
-    function buyTokensPrivateSale(uint256 usdAmount, string memory affiliateCode) external payable nonReentrant whenNotPaused {
+    function buyTokensPrivateSale(uint256 usdAmount, string calldata affiliateCode) external payable nonReentrant whenNotPaused {
+        require(whitelist[msg.sender], "Address not whitelisted");
         require(privateSaleSoldTokens < PRIVATE_SALE_TOKENS, "Private Sale sold out");
 
         uint256 tokensToBuy = calculateTokensPrivateSale(usdAmount);
-        privateSaleSoldTokens = privateSaleSoldTokens.add(tokensToBuy);
+        privateSaleSoldTokens += tokensToBuy;
         require(privateSaleSoldTokens <= PRIVATE_SALE_TOKENS, "Exceeds Private Sale token limit");
 
         _transfer(address(this), msg.sender, tokensToBuy);
@@ -118,7 +133,11 @@ contract Bettoken is ERC20, Ownable, ReentrancyGuard, Pausable, ERC20Permit {
             address affiliate = affiliateOwners[affiliateCode];
             require(affiliate != address(0), "Invalid affiliate code");
 
-            uint256 affiliateReward = tokensToBuy.mul(affiliateRewardPercentage).div(100);
+            uint256 affiliateReward = tokensToBuy * affiliateRewardPercentage / 100;
+
+            // Affiliate ödüllerini kaydet
+            affiliateRewards[affiliate] += affiliateReward;
+
             _transfer(address(this), affiliate, affiliateReward);
             emit AffiliateRewardPaid(affiliate, affiliateReward);
         }
@@ -128,18 +147,17 @@ contract Bettoken is ERC20, Ownable, ReentrancyGuard, Pausable, ERC20Permit {
 
     // --- Pre-Sale Fonksiyonları ---
 
-    function buyTokensPreSale(uint256 usdAmount, string memory affiliateCode) external payable nonReentrant whenNotPaused {
+    function buyTokensPreSale(uint256 usdAmount, string calldata affiliateCode) external payable nonReentrant whenNotPaused {
         require(preSaleSoldTokens < PRESALE_TOKENS, "Pre-Sale sold out");
         require(usdAmount >= minPurchaseAmount && usdAmount <= maxPurchaseAmount, "Purchase amount out of limits");
 
         uint256 tokensToBuy = calculateTokensPreSale(usdAmount);
         
-        // Bellek optimizasyonu: userPurchaseAmounts için bellek değişkeni ekledik
-        uint256 userPurchaseAmount = userPurchaseAmounts[msg.sender].add(usdAmount);
+        uint256 userPurchaseAmount = userPurchaseAmounts[msg.sender] + usdAmount;
         require(userPurchaseAmount <= maxPurchaseAmount, "Exceeds maximum purchase limit per user");
         userPurchaseAmounts[msg.sender] = userPurchaseAmount;
 
-        preSaleSoldTokens = preSaleSoldTokens.add(tokensToBuy);
+        preSaleSoldTokens += tokensToBuy;
         require(preSaleSoldTokens <= PRESALE_TOKENS, "Exceeds Pre-Sale token limit");
 
         _transfer(address(this), msg.sender, tokensToBuy);
@@ -148,7 +166,11 @@ contract Bettoken is ERC20, Ownable, ReentrancyGuard, Pausable, ERC20Permit {
             address affiliate = affiliateOwners[affiliateCode];
             require(affiliate != address(0), "Invalid affiliate code");
 
-            uint256 affiliateReward = tokensToBuy.mul(affiliateRewardPercentage).div(100);
+            uint256 affiliateReward = tokensToBuy * affiliateRewardPercentage / 100;
+
+            // Affiliate ödüllerini kaydet
+            affiliateRewards[affiliate] += affiliateReward;
+
             _transfer(address(this), affiliate, affiliateReward);
             emit AffiliateRewardPaid(affiliate, affiliateReward);
         }
@@ -158,14 +180,8 @@ contract Bettoken is ERC20, Ownable, ReentrancyGuard, Pausable, ERC20Permit {
 
     // --- Airdrop Fonksiyonları ---
 
-    /**
-     * @dev Airdrop süresini başlatır ve bitiş zamanını ayarlar.
-     * @param _startTime Airdrop başlangıç zamanı.
-     * @param _endTime Airdrop bitiş zamanı.
-     */
     function startAirdrop(uint256 _startTime, uint256 _endTime) external onlyOwner {
-        require(_startTime < _endTime, "Invalid airdrop period");
-        require(_startTime > block.timestamp, "Start time must be in the future");
+        require(_startTime < _endTime && _startTime > block.timestamp, "Invalid airdrop period");
         require(!airdropActive, "Airdrop already active");
 
         airdropStartTime = _startTime;
@@ -175,9 +191,6 @@ contract Bettoken is ERC20, Ownable, ReentrancyGuard, Pausable, ERC20Permit {
         emit AirdropStarted(_startTime, _endTime);
     }
 
-    /**
-     * @dev Airdrop süresini bitirir.
-     */
     function endAirdrop() external onlyOwner {
         require(airdropActive, "Airdrop is not active");
         require(block.timestamp > airdropEndTime, "Airdrop period not finished");
@@ -187,29 +200,31 @@ contract Bettoken is ERC20, Ownable, ReentrancyGuard, Pausable, ERC20Permit {
         emit AirdropEnded();
     }
 
-    /**
-     * @dev Airdrop için uygun adresleri belirler.
-     * @param recipients Airdrop yapılacak adresler.
-     */
-    function setAirdropEligible(address[] memory recipients) external onlyOwner {
-        require(airdropActive, "Airdrop must be active");
+    // --- Toplu Airdrop Uygunluğu Ayarlama ---
 
-        for (uint256 i = 0; i < recipients.length; i++) {
+    function setAirdropEligibleBatch(address[] calldata recipients, uint256 batchSize, uint256 batchIndex) external onlyOwner {
+        uint256 startIndex = batchIndex * batchSize;
+        uint256 endIndex = startIndex + batchSize;
+
+        require(endIndex <= recipients.length, "Batch exceeds recipient list length");
+
+        for (uint256 i = startIndex; i < endIndex; i++) {
             airdropEligible[recipients[i]] = true;
         }
     }
 
-    /**
-     * @dev Airdrop ile tokenları dağıtır.
-     * @param recipients Airdrop yapılacak adresler.
-     * @param amount Her alıcıya dağıtılacak token miktarı.
-     */
-    function distributeAirdrop(address[] memory recipients, uint256 amount) external onlyOwner nonReentrant {
+    // --- Toplu Airdrop Dağıtımı ---
+
+    function distributeAirdropBatch(address[] calldata recipients, uint256 amount, uint256 batchSize, uint256 batchIndex) external onlyOwner nonReentrant whenNotPaused {
         require(airdropActive, "Airdrop is not active");
         require(block.timestamp >= airdropStartTime && block.timestamp <= airdropEndTime, "Airdrop period is over");
 
-        uint256 length = recipients.length; // Döngü içinde tekrar tekrar depodan okunmayı engelledik
-        for (uint256 i = 0; i < length; i++) {
+        uint256 startIndex = batchIndex * batchSize;
+        uint256 endIndex = startIndex + batchSize;
+
+        require(endIndex <= recipients.length, "Batch exceeds recipient list length");
+
+        for (uint256 i = startIndex; i < endIndex; i++) {
             if (airdropEligible[recipients[i]]) {
                 _transfer(address(this), recipients[i], amount);
                 emit AirdropDistributed(recipients[i], amount);
@@ -244,22 +259,22 @@ contract Bettoken is ERC20, Ownable, ReentrancyGuard, Pausable, ERC20Permit {
 
     function createVestingSchedule(address beneficiary, uint256 amount, uint256 startTime, uint256 duration, uint256 interval) internal {
         VestingSchedule storage schedule = vestingSchedules[beneficiary];
-        schedule.totalAmount = schedule.totalAmount.add(amount);
+        schedule.totalAmount += amount;
         schedule.startTime = startTime;
         schedule.duration = duration;
         schedule.interval = interval;
     }
 
-    function releaseVestedTokens() external nonReentrant {
+    function releaseVestedTokens() external nonReentrant whenNotPaused {
         VestingSchedule storage schedule = vestingSchedules[msg.sender];
         require(block.timestamp >= schedule.startTime, "Vesting has not started yet");
 
-        uint256 vestedAmount = schedule.totalAmount.mul(block.timestamp.sub(schedule.startTime)).div(schedule.duration);
-        uint256 releasableAmount = vestedAmount.sub(schedule.releasedAmount);
+        uint256 vestedAmount = schedule.totalAmount * (block.timestamp - schedule.startTime) / schedule.duration;
+        uint256 releasableAmount = vestedAmount - schedule.releasedAmount;
 
         require(releasableAmount > 0, "No tokens available for release");
 
-        schedule.releasedAmount = schedule.releasedAmount.add(releasableAmount);
+        schedule.releasedAmount += releasableAmount;
         _transfer(address(this), msg.sender, releasableAmount);
 
         emit VestedTokensReleased(msg.sender, releasableAmount);
@@ -293,26 +308,40 @@ contract Bettoken is ERC20, Ownable, ReentrancyGuard, Pausable, ERC20Permit {
     // --- Satın Alım Miktarı Hesaplama ---
 
     function calculateTokensPrivateSale(uint256 usdAmount) internal view returns (uint256) {
-        uint256 tokenRange = privateSaleEndPrice.sub(privateSaleStartPrice);
-        uint256 currentPrice = privateSaleStartPrice.add(
-            tokenRange.mul(privateSaleSoldTokens).div(PRIVATE_SALE_TOKENS)
-        );
+        uint256 tokenRange = privateSaleEndPrice - privateSaleStartPrice;
+        uint256 currentPrice = privateSaleStartPrice + (tokenRange * privateSaleSoldTokens / PRIVATE_SALE_TOKENS);
         require(currentPrice >= privateSaleStartPrice && currentPrice <= privateSaleEndPrice, "Invalid price calculation");
 
-        uint256 tokens = usdAmount.div(currentPrice);
+        uint256 tokens = usdAmount / currentPrice;
         return tokens;
     }
 
     function calculateTokensPreSale(uint256 usdAmount) internal view returns (uint256) {
-        uint256 tokenRange = preSaleEndPrice.sub(preSaleStartPrice);
-        uint256 currentPrice = preSaleStartPrice.add(
-            tokenRange.mul(preSaleSoldTokens).div(PRESALE_TOKENS)
-        );
+        uint256 tokenRange = preSaleEndPrice - preSaleStartPrice;
+        uint256 currentPrice = preSaleStartPrice + (tokenRange * preSaleSoldTokens / PRESALE_TOKENS);
         require(currentPrice >= preSaleStartPrice && currentPrice <= preSaleEndPrice, "Invalid price calculation");
 
-        uint256 tokens = usdAmount.div(currentPrice);
+        uint256 tokens = usdAmount / currentPrice;
         return tokens;
     }
+
+    // --- Toplam Satılan Tokenları Gösteren Fonksiyonlar ---
+    
+    function getTotalPrivateSaleSoldTokens() public view returns (uint256) {
+        return privateSaleSoldTokens;
+    }
+
+    function getTotalPreSaleSoldTokens() public view returns (uint256) {
+        return preSaleSoldTokens;
+    }
+
+    // --- Affiliate Ödül Fonksiyonları ---
+    
+    function getAffiliateReward(address affiliate) public view returns (uint256) {
+        return affiliateRewards[affiliate];
+    }
+
+    // --- Fallback Fonksiyonları ---
 
     fallback() external payable {
         revert("Direct ETH transfers not allowed.");
