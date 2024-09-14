@@ -1,108 +1,271 @@
-# Bettoken Smart Contract
+# Bettoken Akıllı Kontratı
 
-Bu README dosyası, Bettoken akıllı kontratının fonksiyonlarını ve kullanımını açıklar.
+Bu kontrat, **Bettoken** adında bir ERC20 tabanlı token yönetim kontratıdır. Kontratta airdrop, private sale, pre-sale, vesting gibi işlemleri gerçekleştiren fonksiyonlar bulunur.
 
-## Kontrat Genel Bakış
+## Kontrat Özeti
 
-Bettoken, ERC20 token standardını uygulayan, özel satış ve ön satış mekanizmaları içeren, affiliate sistemine sahip ve whitelist özelliği bulunan bir Ethereum akıllı kontratıdır.
+- **Toplam Arz (TOTAL_SUPPLY)**: 1 milyar BETT token.
+- **Airdrop**: Token dağılımının %5'i airdrop ve bonuslar için ayrılmıştır.
+- **Private Sale**: Token dağılımının %3.88'i private sale için ayrılmıştır.
+- **Pre-Sale**: Token dağılımının %16.11'i pre-sale için ayrılmıştır.
+
+---
 
 ## Fonksiyonlar
 
-### Yapıcı (Constructor)
+### 1. **addToWhitelist**
 
-```solidity
-constructor()
-```
+Whitelist'e bir adres ekler.
 
-- Kontratı başlatır ve toplam token arzını (1 milyar BETT) oluşturur.
-- Tüm tokenleri kontrat adresine mint eder.
+**Girişler**:
+- `_address (address)`: Whitelist'e eklenecek adres.
 
-### White List Fonksiyonları
+**Çıkışlar**: Yok.
 
-#### addToWhiteList
+---
 
-```solidity
-function addToWhiteList(address account) external onlyOwner
-```
+### 2. **removeFromWhitelist**
 
-- Bir adresi whitelist'e ekler.
-- Sadece kontrat sahibi tarafından çağrılabilir.
+Whitelist'ten bir adresi çıkarır.
 
-#### removeFromWhiteList
+**Girişler**:
+- `_address (address)`: Whitelist'ten çıkarılacak adres.
 
-```solidity
-function removeFromWhiteList(address account) external onlyOwner
-```
+**Çıkışlar**: Yok.
 
-- Bir adresi whitelist'ten çıkarır.
-- Sadece kontrat sahibi tarafından çağrılabilir.
+---
 
-### Affiliate Sistem Fonksiyonları
+### 3. **buyTokensPrivateSale**
 
-#### addAffiliate
+Private sale'de token satın alınmasını sağlar. Yalnızca whitelist'teki adresler tarafından kullanılabilir.
 
-```solidity
-function addAffiliate(address affiliate, string memory code) external onlyOwner
-```
+**Girişler**:
+- `usdAmount (uint256)`: Satın alınacak token miktarını belirtir.
+- `affiliateCode (string)`: Affiliate kodu. İsteğe bağlıdır.
 
-- Yeni bir affiliate adresi ve kodu ekler.
-- Sadece kontrat sahibi tarafından çağrılabilir.
+**Çıkışlar**: Yok.
 
-#### removeAffiliate
+---
 
-```solidity
-function removeAffiliate(address affiliate) external onlyOwner
-```
+### 4. **buyTokensPreSale**
 
-- Bir affiliate adresini ve kodunu siler.
-- Sadece kontrat sahibi tarafından çağrılabilir.
+Pre-sale'de token satın alınmasını sağlar.
 
-### Satış Fonksiyonları
+**Girişler**:
+- `usdAmount (uint256)`: Satın alınacak token miktarını belirtir.
+- `affiliateCode (string)`: Affiliate kodu. İsteğe bağlıdır.
 
-#### buyTokensPrivateSale
+**Çıkışlar**: Yok.
 
-```solidity
-function buyTokensPrivateSale(uint256 usdAmount, string memory affiliateCode) external payable nonReentrant whenNotPaused
-```
+---
 
-- Özel satış sırasında token satın almak için kullanılır.
-- Alıcı whitelist'te olmalıdır.
-- Affiliate kodu kullanılabilir.
+### 5. **startAirdrop**
 
-#### buyTokensPreSale
+Airdrop dönemini başlatır.
 
-```solidity
-function buyTokensPreSale(uint256 usdAmount, string memory affiliateCode) external payable nonReentrant whenNotPaused
-```
+**Girişler**:
+- `_startTime (uint256)`: Airdrop'un başlama zamanı (timestamp).
+- `_endTime (uint256)`: Airdrop'un bitiş zamanı (timestamp).
 
-- Ön satış sırasında token satın almak için kullanılır.
-- Minimum ve maksimum satın alma miktarı sınırlamaları vardır.
-- Affiliate kodu kullanılabilir.
+**Çıkışlar**: Yok.
 
-### Token Hesaplama Fonksiyonları
+---
 
-#### calculateTokensPrivateSale
+### 6. **endAirdrop**
 
-```solidity
-function calculateTokensPrivateSale(uint256 usdAmount) public view returns (uint256)
-```
+Airdrop'u sonlandırır.
 
-- Özel satış sırasında belirli bir USD miktarı için alınabilecek token miktarını hesaplar.
+**Girişler**: Yok.
 
-#### calculateTokensPreSale
+**Çıkışlar**: Yok.
 
-```solidity
-function calculateTokensPreSale(uint256 usdAmount) public view returns (uint256)
-```
+---
 
-- Ön satış sırasında belirli bir USD miktarı için alınabilecek token miktarını hesaplar.
+### 7. **setAirdropEligibleBatch**
 
-## Önemli Notlar
+Airdrop için uygun olan adresleri toplu olarak belirler.
 
-- Kontrat, OpenZeppelin kütüphanelerini kullanarak güvenlik özelliklerini (ReentrancyGuard, Pausable) ve standart token fonksiyonlarını (ERC20, ERC20Permit) uygular.
-- Token dağıtımı farklı kategorilere ayrılmıştır: piyasa, takım, ön satış, airdrop ve yakma.
-- Affiliate sistemi, satışları teşvik etmek için kullanılır ve başarılı referanslar için ödüller verir.
-- Whitelist sistemi, özel satışa katılımı kontrol etmek için kullanılır.
-- Satış fiyatları, satılan token miktarına göre dinamik olarak artar.
+**Girişler**:
+- `recipients (address[])`: Uygun olan adreslerin listesi.
+- `batchSize (uint256)`: Batch boyutu.
+- `batchIndex (uint256)`: İşlenecek batch'in indeksi.
 
-Bu README, Bettoken akıllı kontratının temel işlevlerini ve özelliklerini özetlemektedir. Daha detaylı bilgi için lütfen kontrat kodunu inceleyin.
+**Çıkışlar**: Yok.
+
+---
+
+### 8. **distributeAirdropBatch**
+
+Airdrop tokenlarını toplu olarak dağıtır.
+
+**Girişler**:
+- `recipients (address[])`: Token alacak adreslerin listesi.
+- `amount (uint256)`: Her bir adres için dağıtılacak token miktarı.
+- `batchSize (uint256)`: Batch boyutu.
+- `batchIndex (uint256)`: İşlenecek batch'in indeksi.
+
+**Çıkışlar**: Yok.
+
+---
+
+### 9. **releaseTeamTokens**
+
+Takım tokenlarını serbest bırakır. Sadece takım tokenlarının kilit süresi dolduğunda kullanılabilir.
+
+**Girişler**: Yok.
+
+**Çıkışlar**: Yok.
+
+---
+
+### 10. **endSale**
+
+Satışı sonlandırır. Satış bittiğinde kontrat duraklatılır.
+
+**Girişler**: Yok.
+
+**Çıkışlar**: Yok.
+
+---
+
+### 11. **createVestingSchedule**
+
+Bir kullanıcı için vesting takvimi oluşturur. Bu fonksiyon `internal` olarak tanımlandığı için yalnızca kontrat içinden çağrılabilir.
+
+**Girişler**:
+- `beneficiary (address)`: Tokenların sahibi.
+- `amount (uint256)`: Vesting yapılacak token miktarı.
+- `startTime (uint256)`: Vesting başlangıç zamanı.
+- `duration (uint256)`: Vesting süresi.
+- `interval (uint256)`: Vesting'in gerçekleşeceği aralık.
+
+**Çıkışlar**: Yok.
+
+---
+
+### 12. **releaseVestedTokens**
+
+Vesting altında olan tokenları serbest bırakır.
+
+**Girişler**: Yok.
+
+**Çıkışlar**: Yok.
+
+---
+
+### 13. **withdrawTokens**
+
+Kontrattaki tokenları çekmeye yarar.
+
+**Girişler**:
+- `amount (uint256)`: Çekilecek token miktarı.
+
+**Çıkışlar**: Yok.
+
+---
+
+### 14. **withdrawFunds**
+
+Kontrattaki ETH fonlarını çekmeye yarar.
+
+**Girişler**: Yok.
+
+**Çıkışlar**: Yok.
+
+---
+
+### 15. **emergencyPause**
+
+Acil durumlar için kontratı duraklatır. Bu işlem, yalnızca kontrat sahibi tarafından çağrılabilir.
+
+**Girişler**: Yok.
+
+**Çıkışlar**: Yok.
+
+---
+
+### 16. **unpause**
+
+Durdurulan kontratı tekrar çalışır hale getirir. Bu işlem, yalnızca kontrat sahibi tarafından çağrılabilir.
+
+**Girişler**: Yok.
+
+**Çıkışlar**: Yok.
+
+---
+
+### 17. **calculateTokensPrivateSale**
+
+Private sale sırasında token miktarını hesaplar. Bu fonksiyon `internal` olup yalnızca kontrat içinde çağrılabilir.
+
+**Girişler**:
+- `usdAmount (uint256)`: USD cinsinden satın alma miktarı.
+
+**Çıkışlar**:
+- `(uint256)`: Hesaplanan token miktarı.
+
+---
+
+### 18. **calculateTokensPreSale**
+
+Pre-sale sırasında token miktarını hesaplar. Bu fonksiyon `internal` olup yalnızca kontrat içinde çağrılabilir.
+
+**Girişler**:
+- `usdAmount (uint256)`: USD cinsinden satın alma miktarı.
+
+**Çıkışlar**:
+- `(uint256)`: Hesaplanan token miktarı.
+
+---
+
+### 19. **getTotalPrivateSaleSoldTokens**
+
+Private sale sırasında satılan toplam token miktarını döndürür.
+
+**Girişler**: Yok.
+
+**Çıkışlar**:
+- `(uint256)`: Satılan toplam token miktarı.
+
+---
+
+### 20. **getTotalPreSaleSoldTokens**
+
+Pre-sale sırasında satılan toplam token miktarını döndürür.
+
+**Girişler**: Yok.
+
+**Çıkışlar**:
+- `(uint256)`: Satılan toplam token miktarı.
+
+---
+
+### 21. **getAffiliateReward**
+
+Belirli bir affiliate adresine ait ödül miktarını döndürür.
+
+**Girişler**:
+- `affiliate (address)`: Affiliate adresi.
+
+**Çıkışlar**:
+- `(uint256)`: Affiliate ödül miktarı.
+
+---
+
+### 22. **fallback**
+
+ETH transferlerini reddeder. Harici bir transfer işlemi gerçekleştiğinde çağrılır.
+
+**Girişler**: Yok.
+
+**Çıkışlar**: Yok.
+
+---
+
+### 23. **receive**
+
+ETH transferlerini reddeder. ETH transferi gönderildiğinde çağrılır.
+
+**Girişler**: Yok.
+
+**Çıkışlar**: Yok.
