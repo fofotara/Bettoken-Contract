@@ -17,9 +17,13 @@ contract Bettoken is ERC20, Ownable, ReentrancyGuard, Pausable, ERC20Permit {
     // Token Dağılımı
     uint256 public constant MARKET_ALLOCATION = 500_000_000 * 10 ** 18;   // %50 Piyasa için
     uint256 public constant TEAM_ALLOCATION = 100_000_000 * 10 ** 18;     // %10 Takım için (kilitli)
-    uint256 public constant PRESALE_ALLOCATION = 200_000_000 * 10 ** 18;  // %20 Ön Satış
+    uint256 public constant PRESALE_ALLOCATION = 150_000_000 * 10 ** 18;  // %15 Ön Satış
+    uint256 public constant PRIVATE_SALE_ALLOCATION = 50_000_000 * 10 ** 18; // %5 Private Sale
     uint256 public constant AIRDROP_ALLOCATION = 50_000_000 * 10 ** 18;   // %5 Airdrop ve Bonuslar
     uint256 public constant BURN_ALLOCATION = 150_000_000 * 10 ** 18;     // %15 Yakılacak Tokenlar
+
+    // Bekleyen yakılacak token miktarı
+    uint256 public pendingBurnTokens;
 
     // Airdrop için zaman ve liste tanımları
     uint256 public airdropStartTime;
@@ -31,22 +35,26 @@ contract Bettoken is ERC20, Ownable, ReentrancyGuard, Pausable, ERC20Permit {
     uint256 public teamTokenReleaseTime;
 
     // Private Sale variables
-    uint256 public constant PRIVATE_SALE_TOKENS = 38_835_764 * 10 ** 18;
+    uint256 public constant PRIVATE_SALE_TOKENS = 50_000_000 * 10 ** 18;
     uint256 public privateSaleSoldTokens = 0;
-    uint256 public privateSaleStartPrice = 0.001 * 10 ** 18;
-    uint256 public privateSaleEndPrice = 0.0505 * 10 ** 18;
+    uint256 public privateSaleStartPrice = 0.001 * 10 ** 18; // 0.001 USD/BETT
+    uint256 public privateSaleEndPrice = 0.005 * 10 ** 18; // 0.005 USD/BETT
+    uint256 public minPrivateSaleAmount = 1000 * 10 ** 18; // Minimum 1000 USD
+    bool public privateSaleCompleted = false;
 
     // Pre-Sale variables
-    uint256 public constant PRESALE_TOKENS = 161_164_236 * 10 ** 18;
+    uint256 public constant PRESALE_TOKENS = 150_000_000 * 10 ** 18;
     uint256 public preSaleSoldTokens = 0;
-    uint256 public preSaleStartPrice = 0.0505 * 10 ** 18;
-    uint256 public preSaleEndPrice = 0.1 * 10 ** 18;
-    uint256 public minPurchaseAmount = 100 * 10 ** 18;
-    uint256 public maxPurchaseAmount = 3000 * 10 ** 18;
+    uint256 public preSaleStartPrice = 0.005 * 10 ** 18; // 0.005 USD/BETT
+    uint256 public preSaleEndPrice = 0.1 * 10 ** 18; // 0.1 USD/BETT
+    uint256 public minPreSaleAmount = 100 * 10 ** 18; // Minimum 100 USD
+    uint256 public maxPreSaleAmount = 3000 * 10 ** 18; // Maximum 3000 USD
+    bool public preSaleCompleted = false;
+    uint256 public preSaleEndTime;
 
     // Vesting Variables
-    uint256 public constant STAKE_DURATION = 365 days; // 1 yıl
-    uint256 public constant VESTING_DURATION = 180 days; // 6 ay
+    uint256 public constant STAKE_DURATION = 365 days; // 1 yıl stake
+    uint256 public constant VESTING_DURATION = 180 days; // 6 ay vesting
     mapping(address => VestingSchedule) public vestingSchedules;
 
     struct VestingSchedule {
@@ -56,6 +64,11 @@ contract Bettoken is ERC20, Ownable, ReentrancyGuard, Pausable, ERC20Permit {
         uint256 duration;
         uint256 interval;
     }
+
+    // Kullanıcıların stake bilgileri
+    mapping(address => uint256) public stakes;
+    mapping(address => uint256) public stakeStartTime;
+    mapping(address => uint256) public vestingReleaseTime;
 
     // Satın alım sınırlarını izlemek için mapping
     mapping(address => uint256) public userPurchaseAmounts;
@@ -101,26 +114,14 @@ contract Bettoken is ERC20, Ownable, ReentrancyGuard, Pausable, ERC20Permit {
         // Takım tokenlarını kilitle (1 yıl kilitli)
         teamTokenReleaseTime = block.timestamp + 365 days;
         emit TeamTokensLocked(TEAM_ALLOCATION);
-
-        // Yakılacak tokenlar
-        _burn(address(this), BURN_ALLOCATION);
-        emit TokensBurned(BURN_ALLOCATION);
-    }
-
-    // --- Whitelist Yönetimi ---
-
-    function addToWhitelist(address _address) external onlyOwner {
-        whitelist[_address] = true;
-    }
-
-    function removeFromWhitelist(address _address) external onlyOwner {
-        whitelist[_address] = false;
     }
 
     // --- Private Sale Fonksiyonları ---
 
     function buyTokensPrivateSale(uint256 usdAmount, string calldata affiliateCode) external payable nonReentrant whenNotPaused {
         require(whitelist[msg.sender], "Address not whitelisted");
+        require(!privateSaleCompleted, "Private Sale has ended");
+        require(usdAmount >= minPrivateSaleAmount, "Minimum investment amount not met");
         require(privateSaleSoldTokens < PRIVATE_SALE_TOKENS, "Private Sale sold out");
 
         uint256 tokensToBuy = calculateTokensPrivateSale(usdAmount);
@@ -145,16 +146,23 @@ contract Bettoken is ERC20, Ownable, ReentrancyGuard, Pausable, ERC20Permit {
         emit PrivateSale(msg.sender, tokensToBuy, affiliateCode);
     }
 
+    function completePrivateSale() external onlyOwner {
+        require(!privateSaleCompleted, "Private Sale already completed");
+        privateSaleCompleted = true;
+        emit PrivateSaleCompleted();
+    }
+
     // --- Pre-Sale Fonksiyonları ---
 
     function buyTokensPreSale(uint256 usdAmount, string calldata affiliateCode) external payable nonReentrant whenNotPaused {
+        require(!preSaleCompleted, "Pre-Sale has ended");
+        require(usdAmount >= minPreSaleAmount && usdAmount <= maxPreSaleAmount, "Purchase amount out of limits");
         require(preSaleSoldTokens < PRESALE_TOKENS, "Pre-Sale sold out");
-        require(usdAmount >= minPurchaseAmount && usdAmount <= maxPurchaseAmount, "Purchase amount out of limits");
 
         uint256 tokensToBuy = calculateTokensPreSale(usdAmount);
-        
+
         uint256 userPurchaseAmount = userPurchaseAmounts[msg.sender] + usdAmount;
-        require(userPurchaseAmount <= maxPurchaseAmount, "Exceeds maximum purchase limit per user");
+        require(userPurchaseAmount <= maxPreSaleAmount, "Exceeds maximum purchase limit per user");
         userPurchaseAmounts[msg.sender] = userPurchaseAmount;
 
         preSaleSoldTokens += tokensToBuy;
@@ -178,106 +186,54 @@ contract Bettoken is ERC20, Ownable, ReentrancyGuard, Pausable, ERC20Permit {
         emit PreSale(msg.sender, tokensToBuy, affiliateCode);
     }
 
-    // --- Airdrop Fonksiyonları ---
-
-    function startAirdrop(uint256 _startTime, uint256 _endTime) external onlyOwner {
-        require(_startTime < _endTime && _startTime > block.timestamp, "Invalid airdrop period");
-        require(!airdropActive, "Airdrop already active");
-
-        airdropStartTime = _startTime;
-        airdropEndTime = _endTime;
-        airdropActive = true;
-
-        emit AirdropStarted(_startTime, _endTime);
+    function completePreSale() external onlyOwner {
+        require(!preSaleCompleted, "Pre-Sale already completed");
+        preSaleCompleted = true;
+        preSaleEndTime = block.timestamp;
+        emit PreSaleCompleted();
     }
 
-    function endAirdrop() external onlyOwner {
-        require(airdropActive, "Airdrop is not active");
-        require(block.timestamp > airdropEndTime, "Airdrop period not finished");
+    // --- Stake Fonksiyonu ---
+    function stakeTokens(uint256 amount) external nonReentrant whenNotPaused {
+        require(amount > 0, "Stake amount must be greater than zero");
+        require(balanceOf(msg.sender) >= amount, "Insufficient balance to stake");
+        require(preSaleCompleted, "Pre-sale must be completed before staking");
 
-        airdropActive = false;
+        _transfer(msg.sender, address(this), amount);
+        stakes[msg.sender] += amount;
+        stakeStartTime[msg.sender] = block.timestamp;
+        vestingReleaseTime[msg.sender] = block.timestamp + STAKE_DURATION + VESTING_DURATION;
 
-        emit AirdropEnded();
+        emit TokensStaked(msg.sender, amount, vestingReleaseTime[msg.sender]);
     }
 
-    // --- Toplu Airdrop Uygunluğu Ayarlama ---
-
-    function setAirdropEligibleBatch(address[] calldata recipients, uint256 batchSize, uint256 batchIndex) external onlyOwner {
-        uint256 startIndex = batchIndex * batchSize;
-        uint256 endIndex = startIndex + batchSize;
-
-        require(endIndex <= recipients.length, "Batch exceeds recipient list length");
-
-        for (uint256 i = startIndex; i < endIndex; i++) {
-            airdropEligible[recipients[i]] = true;
-        }
-    }
-
-    // --- Toplu Airdrop Dağıtımı ---
-
-    function distributeAirdropBatch(address[] calldata recipients, uint256 amount, uint256 batchSize, uint256 batchIndex) external onlyOwner nonReentrant whenNotPaused {
-        require(airdropActive, "Airdrop is not active");
-        require(block.timestamp >= airdropStartTime && block.timestamp <= airdropEndTime, "Airdrop period is over");
-
-        uint256 startIndex = batchIndex * batchSize;
-        uint256 endIndex = startIndex + batchSize;
-
-        require(endIndex <= recipients.length, "Batch exceeds recipient list length");
-
-        for (uint256 i = startIndex; i < endIndex; i++) {
-            if (airdropEligible[recipients[i]]) {
-                _transfer(address(this), recipients[i], amount);
-                emit AirdropDistributed(recipients[i], amount);
-                airdropEligible[recipients[i]] = false;
-            }
-        }
-    }
-
-    // --- Takım Tokenları Serbest Bırakma ---
-
-    function releaseTeamTokens() external onlyOwner {
-        require(block.timestamp >= teamTokenReleaseTime, "Tokens are still locked");
-        require(balanceOf(address(this)) >= TEAM_ALLOCATION, "Insufficient tokens for team");
-
-        _transfer(address(this), owner(), TEAM_ALLOCATION);
-        emit TeamTokensReleased(TEAM_ALLOCATION);
-    }
-
-    // --- Satışların Tamamlanması ---
-
-    function endSale() external onlyOwner {
-        if (privateSaleSoldTokens == PRIVATE_SALE_TOKENS) {
-            _pause(); // Private Sale tamamlandıysa kontratı duraklat
-            emit PrivateSaleCompleted();
-        } else if (preSaleSoldTokens == PRESALE_TOKENS) {
-            _pause(); // Pre-Sale tamamlandıysa kontratı duraklat
-            emit PreSaleCompleted();
-        }
-    }
-
-    // --- Vesting Fonksiyonları ---
-
-    function createVestingSchedule(address beneficiary, uint256 amount, uint256 startTime, uint256 duration, uint256 interval) internal {
-        VestingSchedule storage schedule = vestingSchedules[beneficiary];
-        schedule.totalAmount += amount;
-        schedule.startTime = startTime;
-        schedule.duration = duration;
-        schedule.interval = interval;
-    }
-
+    // --- Vesting Çözme (Serbest Bırakma) Fonksiyonu ---
     function releaseVestedTokens() external nonReentrant whenNotPaused {
-        VestingSchedule storage schedule = vestingSchedules[msg.sender];
-        require(block.timestamp >= schedule.startTime, "Vesting has not started yet");
+        require(stakes[msg.sender] > 0, "No staked tokens to release");
+        require(block.timestamp >= vestingReleaseTime[msg.sender], "Tokens are still in vesting period");
 
-        uint256 vestedAmount = schedule.totalAmount * (block.timestamp - schedule.startTime) / schedule.duration;
-        uint256 releasableAmount = vestedAmount - schedule.releasedAmount;
+        uint256 amount = stakes[msg.sender];
+        stakes[msg.sender] = 0;
+        vestingReleaseTime[msg.sender] = 0;
 
-        require(releasableAmount > 0, "No tokens available for release");
+        _transfer(address(this), msg.sender, amount);
+        emit VestedTokensReleased(msg.sender, amount);
+    }
 
-        schedule.releasedAmount += releasableAmount;
-        _transfer(address(this), msg.sender, releasableAmount);
+    // --- Token Yakımı ---
 
-        emit VestedTokensReleased(msg.sender, releasableAmount);
+    function addToPendingBurn(uint256 amount) external onlyOwner {
+        require(balanceOf(address(this)) >= amount, "Insufficient tokens in contract to burn");
+        pendingBurnTokens += amount;
+    }
+
+    function burnPendingTokens() external onlyOwner {
+        require(pendingBurnTokens > 0, "No pending tokens to burn");
+
+        _burn(address(this), pendingBurnTokens);
+        emit TokensBurned(pendingBurnTokens);
+
+        pendingBurnTokens = 0;
     }
 
     // --- Token ve Fon Çekme (Withdraw Tokens and Funds) ---

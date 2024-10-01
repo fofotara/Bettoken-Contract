@@ -597,6 +597,19 @@
 			},
 			{
 				"inputs": [],
+				"name": "PRIVATE_SALE_ALLOCATION",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
 				"name": "PRIVATE_SALE_TOKENS",
 				"outputs": [
 					{
@@ -663,12 +676,12 @@
 			{
 				"inputs": [
 					{
-						"internalType": "address",
-						"name": "_address",
-						"type": "address"
+						"internalType": "uint256",
+						"name": "amount",
+						"type": "uint256"
 					}
 				],
-				"name": "addToWhitelist",
+				"name": "addToPendingBurn",
 				"outputs": [],
 				"stateMutability": "nonpayable",
 				"type": "function"
@@ -869,6 +882,13 @@
 				"type": "function"
 			},
 			{
+				"inputs": [],
+				"name": "burnPendingTokens",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
 				"inputs": [
 					{
 						"internalType": "uint256",
@@ -906,6 +926,20 @@
 			},
 			{
 				"inputs": [],
+				"name": "completePreSale",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "completePrivateSale",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
 				"name": "decimals",
 				"outputs": [
 					{
@@ -915,34 +949,6 @@
 					}
 				],
 				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "address[]",
-						"name": "recipients",
-						"type": "address[]"
-					},
-					{
-						"internalType": "uint256",
-						"name": "amount",
-						"type": "uint256"
-					},
-					{
-						"internalType": "uint256",
-						"name": "batchSize",
-						"type": "uint256"
-					},
-					{
-						"internalType": "uint256",
-						"name": "batchIndex",
-						"type": "uint256"
-					}
-				],
-				"name": "distributeAirdropBatch",
-				"outputs": [],
-				"stateMutability": "nonpayable",
 				"type": "function"
 			},
 			{
@@ -996,20 +1002,6 @@
 				"type": "function"
 			},
 			{
-				"inputs": [],
-				"name": "endAirdrop",
-				"outputs": [],
-				"stateMutability": "nonpayable",
-				"type": "function"
-			},
-			{
-				"inputs": [],
-				"name": "endSale",
-				"outputs": [],
-				"stateMutability": "nonpayable",
-				"type": "function"
-			},
-			{
 				"inputs": [
 					{
 						"internalType": "address",
@@ -1056,7 +1048,7 @@
 			},
 			{
 				"inputs": [],
-				"name": "maxPurchaseAmount",
+				"name": "maxPreSaleAmount",
 				"outputs": [
 					{
 						"internalType": "uint256",
@@ -1069,7 +1061,20 @@
 			},
 			{
 				"inputs": [],
-				"name": "minPurchaseAmount",
+				"name": "minPreSaleAmount",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "minPrivateSaleAmount",
 				"outputs": [
 					{
 						"internalType": "uint256",
@@ -1139,6 +1144,19 @@
 				"type": "function"
 			},
 			{
+				"inputs": [],
+				"name": "pendingBurnTokens",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
 				"inputs": [
 					{
 						"internalType": "address",
@@ -1183,7 +1201,33 @@
 			},
 			{
 				"inputs": [],
+				"name": "preSaleCompleted",
+				"outputs": [
+					{
+						"internalType": "bool",
+						"name": "",
+						"type": "bool"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
 				"name": "preSaleEndPrice",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "preSaleEndTime",
 				"outputs": [
 					{
 						"internalType": "uint256",
@@ -1215,6 +1259,19 @@
 						"internalType": "uint256",
 						"name": "",
 						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "privateSaleCompleted",
+				"outputs": [
+					{
+						"internalType": "bool",
+						"name": "",
+						"type": "bool"
 					}
 				],
 				"stateMutability": "view",
@@ -1261,27 +1318,7 @@
 			},
 			{
 				"inputs": [],
-				"name": "releaseTeamTokens",
-				"outputs": [],
-				"stateMutability": "nonpayable",
-				"type": "function"
-			},
-			{
-				"inputs": [],
 				"name": "releaseVestedTokens",
-				"outputs": [],
-				"stateMutability": "nonpayable",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "address",
-						"name": "_address",
-						"type": "address"
-					}
-				],
-				"name": "removeFromWhitelist",
 				"outputs": [],
 				"stateMutability": "nonpayable",
 				"type": "function"
@@ -1296,22 +1333,31 @@
 			{
 				"inputs": [
 					{
-						"internalType": "address[]",
-						"name": "recipients",
-						"type": "address[]"
-					},
+						"internalType": "address",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"name": "stakeStartTime",
+				"outputs": [
 					{
 						"internalType": "uint256",
-						"name": "batchSize",
-						"type": "uint256"
-					},
-					{
-						"internalType": "uint256",
-						"name": "batchIndex",
+						"name": "",
 						"type": "uint256"
 					}
 				],
-				"name": "setAirdropEligibleBatch",
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "amount",
+						"type": "uint256"
+					}
+				],
+				"name": "stakeTokens",
 				"outputs": [],
 				"stateMutability": "nonpayable",
 				"type": "function"
@@ -1319,19 +1365,20 @@
 			{
 				"inputs": [
 					{
-						"internalType": "uint256",
-						"name": "_startTime",
-						"type": "uint256"
-					},
+						"internalType": "address",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"name": "stakes",
+				"outputs": [
 					{
 						"internalType": "uint256",
-						"name": "_endTime",
+						"name": "",
 						"type": "uint256"
 					}
 				],
-				"name": "startAirdrop",
-				"outputs": [],
-				"stateMutability": "nonpayable",
+				"stateMutability": "view",
 				"type": "function"
 			},
 			{
@@ -1455,6 +1502,25 @@
 					}
 				],
 				"name": "userPurchaseAmounts",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"name": "vestingReleaseTime",
 				"outputs": [
 					{
 						"internalType": "uint256",
@@ -1908,11 +1974,11 @@
 			]
 		},
 		"contracts/bettoken.sol": {
-			"keccak256": "0x8f641112cd68adaed4c09d74c248061275661a2725affc0a9c7fb3416f2082a0",
+			"keccak256": "0xcb1b2d7b5adf8c1be5553003b35739a4374151b3479736200f6266e8ca2e7868",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://8155a6b9cff20fc1e0eb49b22513c286117a25e4ceededb3630dd8767e4b61e1",
-				"dweb:/ipfs/QmaPCUrRLbtBRqmgoDfMrFLL3hKR1h8M8JbB4rY5txZLPu"
+				"bzz-raw://cd2640ebf70bd8e3bd634a64c8ceb8fd1c600ba731306f2b8089e56e00b3def8",
+				"dweb:/ipfs/QmaW2GReVBos77NcGRR6oH3DSb153CaHT42EaNfZTVLwr7"
 			]
 		}
 	},
