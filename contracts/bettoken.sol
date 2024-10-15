@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.6;
+pragma solidity ^0.8.2;
 
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/security/Pausable.sol";
-import "@openzeppelin/contracts/token/ERC20/extensions/draft-ERC20Permit.sol";
+import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC20/ERC20.sol";
+import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/access/Ownable.sol";
+import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/utils/ReentrancyGuard.sol";
+import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC20/extensions/ERC20Pausable.sol";
+import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC20/extensions/ERC20Permit.sol";
+
 
 /**
 @title Bettoken
@@ -98,6 +99,8 @@ contract Bettoken is ERC20, Ownable, ReentrancyGuard, Pausable, ERC20Permit {
     event AirdropDistributed(address indexed recipient, uint256 amount);
     event TokensStaked(address indexed staker, uint256 amount, uint256 releaseTime);
     event VestedTokensReleased(address indexed beneficiary, uint256 amount);
+    event TokensWithdrawn(uint256 amount);
+    event FundsWithdrawn(uint256 amount);
 
     constructor() 
         ERC20("Bettoken", "BETT")
@@ -116,8 +119,30 @@ contract Bettoken is ERC20, Ownable, ReentrancyGuard, Pausable, ERC20Permit {
         emit TeamTokensLocked(TEAM_ALLOCATION);
     }
 
-    // --- Private Sale Fonksiyonları ---
+    // --- Whitelist Fonksiyonları ---
+    function addToWhitelist(address user) external onlyOwner {
+        require(!whitelist[user], "Address is already whitelisted");
+        whitelist[user] = true;
+    }
 
+    function removeFromWhitelist(address user) external onlyOwner {
+        require(whitelist[user], "Address is not whitelisted");
+        delete whitelist[user];
+    }
+
+    function addToWhitelistBulk(address[] calldata users) external onlyOwner {
+        for (uint256 i = 0; i < users.length; i++) {
+            if (!whitelist[users[i]]) {
+                whitelist[users[i]] = true;
+            }
+        }
+    }
+
+    function isWhitelisted(address user) external view returns (bool) {
+        return whitelist[user];
+    }
+
+    // --- Private Sale Fonksiyonları ---
     function buyTokensPrivateSale(uint256 usdAmount, string calldata affiliateCode) external payable nonReentrant whenNotPaused {
         require(whitelist[msg.sender], "Address not whitelisted");
         require(!privateSaleCompleted, "Private Sale has ended");
@@ -128,21 +153,16 @@ contract Bettoken is ERC20, Ownable, ReentrancyGuard, Pausable, ERC20Permit {
         privateSaleSoldTokens += tokensToBuy;
         require(privateSaleSoldTokens <= PRIVATE_SALE_TOKENS, "Exceeds Private Sale token limit");
 
-        _transfer(address(this), msg.sender, tokensToBuy);
-
+        // Önce değişken güncellemelerini yap, sonra transfer
         if (bytes(affiliateCode).length > 0) {
             address affiliate = affiliateOwners[affiliateCode];
             require(affiliate != address(0), "Invalid affiliate code");
 
-            uint256 affiliateReward = tokensToBuy * affiliateRewardPercentage / 100;
-
-            // Affiliate ödüllerini kaydet
+            uint256 affiliateReward = (tokensToBuy * affiliateRewardPercentage) / 100;
             affiliateRewards[affiliate] += affiliateReward;
-
-            _transfer(address(this), affiliate, affiliateReward);
-            emit AffiliateRewardPaid(affiliate, affiliateReward);
         }
 
+        _transfer(address(this), msg.sender, tokensToBuy);
         emit PrivateSale(msg.sender, tokensToBuy, affiliateCode);
     }
 
@@ -153,14 +173,12 @@ contract Bettoken is ERC20, Ownable, ReentrancyGuard, Pausable, ERC20Permit {
     }
 
     // --- Pre-Sale Fonksiyonları ---
-
     function buyTokensPreSale(uint256 usdAmount, string calldata affiliateCode) external payable nonReentrant whenNotPaused {
         require(!preSaleCompleted, "Pre-Sale has ended");
         require(usdAmount >= minPreSaleAmount && usdAmount <= maxPreSaleAmount, "Purchase amount out of limits");
         require(preSaleSoldTokens < PRESALE_TOKENS, "Pre-Sale sold out");
 
         uint256 tokensToBuy = calculateTokensPreSale(usdAmount);
-
         uint256 userPurchaseAmount = userPurchaseAmounts[msg.sender] + usdAmount;
         require(userPurchaseAmount <= maxPreSaleAmount, "Exceeds maximum purchase limit per user");
         userPurchaseAmounts[msg.sender] = userPurchaseAmount;
@@ -168,21 +186,15 @@ contract Bettoken is ERC20, Ownable, ReentrancyGuard, Pausable, ERC20Permit {
         preSaleSoldTokens += tokensToBuy;
         require(preSaleSoldTokens <= PRESALE_TOKENS, "Exceeds Pre-Sale token limit");
 
-        _transfer(address(this), msg.sender, tokensToBuy);
-
         if (bytes(affiliateCode).length > 0) {
             address affiliate = affiliateOwners[affiliateCode];
             require(affiliate != address(0), "Invalid affiliate code");
 
-            uint256 affiliateReward = tokensToBuy * affiliateRewardPercentage / 100;
-
-            // Affiliate ödüllerini kaydet
+            uint256 affiliateReward = (tokensToBuy * affiliateRewardPercentage) / 100;
             affiliateRewards[affiliate] += affiliateReward;
-
-            _transfer(address(this), affiliate, affiliateReward);
-            emit AffiliateRewardPaid(affiliate, affiliateReward);
         }
 
+        _transfer(address(this), msg.sender, tokensToBuy);
         emit PreSale(msg.sender, tokensToBuy, affiliateCode);
     }
 
@@ -221,7 +233,6 @@ contract Bettoken is ERC20, Ownable, ReentrancyGuard, Pausable, ERC20Permit {
     }
 
     // --- Token Yakımı ---
-
     function addToPendingBurn(uint256 amount) external onlyOwner {
         require(balanceOf(address(this)) >= amount, "Insufficient tokens in contract to burn");
         pendingBurnTokens += amount;
@@ -236,11 +247,11 @@ contract Bettoken is ERC20, Ownable, ReentrancyGuard, Pausable, ERC20Permit {
         pendingBurnTokens = 0;
     }
 
-    // --- Token ve Fon Çekme (Withdraw Tokens and Funds) ---
-
+    // --- Token ve Fon Çekme ---
     function withdrawTokens(uint256 amount) external onlyOwner nonReentrant {
         require(balanceOf(address(this)) >= amount, "Insufficient tokens in contract");
         _transfer(address(this), owner(), amount);
+        emit TokensWithdrawn(amount);
     }
 
     function withdrawFunds() external onlyOwner nonReentrant {
@@ -249,10 +260,10 @@ contract Bettoken is ERC20, Ownable, ReentrancyGuard, Pausable, ERC20Permit {
 
         (bool success, ) = owner().call{value: balance}("");
         require(success, "Withdraw failed");
+        emit FundsWithdrawn(balance);
     }
 
     // --- Acil Durum Durdurma ---
-
     function emergencyPause() external onlyOwner {
         _pause(); // Kontratı duraklatır
     }
@@ -262,7 +273,6 @@ contract Bettoken is ERC20, Ownable, ReentrancyGuard, Pausable, ERC20Permit {
     }
 
     // --- Satın Alım Miktarı Hesaplama ---
-
     function calculateTokensPrivateSale(uint256 usdAmount) internal view returns (uint256) {
         uint256 tokenRange = privateSaleEndPrice - privateSaleStartPrice;
         uint256 currentPrice = privateSaleStartPrice + (tokenRange * privateSaleSoldTokens / PRIVATE_SALE_TOKENS);
@@ -281,24 +291,7 @@ contract Bettoken is ERC20, Ownable, ReentrancyGuard, Pausable, ERC20Permit {
         return tokens;
     }
 
-    // --- Toplam Satılan Tokenları Gösteren Fonksiyonlar ---
-    
-    function getTotalPrivateSaleSoldTokens() public view returns (uint256) {
-        return privateSaleSoldTokens;
-    }
-
-    function getTotalPreSaleSoldTokens() public view returns (uint256) {
-        return preSaleSoldTokens;
-    }
-
-    // --- Affiliate Ödül Fonksiyonları ---
-    
-    function getAffiliateReward(address affiliate) public view returns (uint256) {
-        return affiliateRewards[affiliate];
-    }
-
     // --- Fallback Fonksiyonları ---
-
     fallback() external payable {
         revert("Direct ETH transfers not allowed.");
     }

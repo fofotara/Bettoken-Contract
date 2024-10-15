@@ -9,12 +9,14 @@ import {ECDSA} from "../../../utils/cryptography/ECDSA.sol";
 import {EIP712} from "../../../utils/cryptography/EIP712.sol";
 import {Nonces} from "../../../utils/Nonces.sol";
 
-
 /**
-   * @title ContractName
-   * @dev ContractDescription
-   * @custom:dev-run-script file_path
-   */
+ * @dev Implementation of the ERC20 Permit extension allowing approvals to be made via signatures, as defined in
+ * https://eips.ethereum.org/EIPS/eip-2612[EIP-2612].
+ *
+ * Adds the {permit} method, which can be used to change an account's ERC20 allowance (see {IERC20-allowance}) by
+ * presenting a message signed by the account. By not relying on `{IERC20-approve}`, the token holder account doesn't
+ * need to send a transaction, and thus is not required to hold Ether at all.
+ */
 abstract contract ERC20Permit is ERC20, IERC20Permit, EIP712, Nonces {
     bytes32 private constant PERMIT_TYPEHASH =
         keccak256("Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)");
