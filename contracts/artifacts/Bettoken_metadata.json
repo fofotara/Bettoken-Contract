@@ -1,12 +1,18 @@
 {
 	"compiler": {
-		"version": "0.8.20+commit.a1b79de6"
+		"version": "0.8.26+commit.8a97fa7a"
 	},
 	"language": "Solidity",
 	"output": {
 		"abi": [
 			{
-				"inputs": [],
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "initialOwner",
+						"type": "address"
+					}
+				],
 				"stateMutability": "nonpayable",
 				"type": "constructor"
 			},
@@ -1800,6 +1806,21 @@
 				"DOMAIN_SEPARATOR()": {
 					"details": "Returns the domain separator used in the encoding of the signature for {permit}, as defined by {EIP712}."
 				},
+				"addToPendingBurn(uint256)": {
+					"params": {
+						"amount": "Yakılacak token miktarı"
+					}
+				},
+				"addToWhitelist(address)": {
+					"params": {
+						"user": "Whitelist'e eklenecek adres"
+					}
+				},
+				"addToWhitelistBulk(address[])": {
+					"params": {
+						"users": "Whitelist'e eklenecek adresler"
+					}
+				},
 				"allowance(address,address)": {
 					"details": "See {IERC20-allowance}."
 				},
@@ -1809,11 +1830,36 @@
 				"balanceOf(address)": {
 					"details": "See {IERC20-balanceOf}."
 				},
+				"buyTokensPreSale(uint256,string)": {
+					"params": {
+						"affiliateCode": "Affiliate kodu (isteğe bağlı)",
+						"usdAmount": "Kullanıcının yatırım yapacağı USD miktarı"
+					}
+				},
+				"buyTokensPrivateSale(uint256,string)": {
+					"params": {
+						"affiliateCode": "Affiliate kodu (isteğe bağlı)",
+						"usdAmount": "Kullanıcının yatırım yapacağı USD miktarı"
+					}
+				},
+				"constructor": {
+					"params": {
+						"initialOwner": "İlk sahip adresi"
+					}
+				},
 				"decimals()": {
 					"details": "Returns the number of decimals used to get its user representation. For example, if `decimals` equals `2`, a balance of `505` tokens should be displayed to a user as `5.05` (`505 / 10 ** 2`). Tokens usually opt for a value of 18, imitating the relationship between Ether and Wei. This is the default value returned by this function, unless it's overridden. NOTE: This information is only used for _display_ purposes: it in no way affects any of the arithmetic of the contract, including {IERC20-balanceOf} and {IERC20-transfer}."
 				},
 				"eip712Domain()": {
 					"details": "See {IERC-5267}."
+				},
+				"isWhitelisted(address)": {
+					"params": {
+						"user": "Kontrol edilecek adres"
+					},
+					"returns": {
+						"_0": "bool Adres whitelist'te ise true döner"
+					}
 				},
 				"name()": {
 					"details": "Returns the name of the token."
@@ -1830,8 +1876,18 @@
 				"permit(address,address,uint256,uint256,uint8,bytes32,bytes32)": {
 					"details": "Sets `value` as the allowance of `spender` over ``owner``'s tokens, given ``owner``'s signed approval. IMPORTANT: The same issues {IERC20-approve} has related to transaction ordering also apply here. Emits an {Approval} event. Requirements: - `spender` cannot be the zero address. - `deadline` must be a timestamp in the future. - `v`, `r` and `s` must be a valid `secp256k1` signature from `owner` over the EIP712-formatted function arguments. - the signature must use ``owner``'s current nonce (see {nonces}). For more information on the signature format, see the https://eips.ethereum.org/EIPS/eip-2612#specification[relevant EIP section]. CAUTION: See Security Considerations above."
 				},
+				"removeFromWhitelist(address)": {
+					"params": {
+						"user": "Whitelist'ten çıkarılacak adres"
+					}
+				},
 				"renounceOwnership()": {
 					"details": "Leaves the contract without owner. It will not be possible to call `onlyOwner` functions. Can only be called by the current owner. NOTE: Renouncing ownership will leave the contract without an owner, thereby disabling any functionality that is only available to the owner."
+				},
+				"stakeTokens(uint256)": {
+					"params": {
+						"amount": "Stake edilecek token miktarı"
+					}
 				},
 				"symbol()": {
 					"details": "Returns the symbol of the token, usually a shorter version of the name."
@@ -1847,6 +1903,11 @@
 				},
 				"transferOwnership(address)": {
 					"details": "Transfers ownership of the contract to a new account (`newOwner`). Can only be called by the current owner."
+				},
+				"withdrawTokens(uint256)": {
+					"params": {
+						"amount": "Çekilecek token miktarı"
+					}
 				}
 			},
 			"title": "Bettoken",
@@ -1854,7 +1915,60 @@
 		},
 		"userdoc": {
 			"kind": "user",
-			"methods": {},
+			"methods": {
+				"addToPendingBurn(uint256)": {
+					"notice": "Yakılacak token miktarını bekleyen listeye ekler"
+				},
+				"addToWhitelist(address)": {
+					"notice": "Bir adresi whitelist'e ekler"
+				},
+				"addToWhitelistBulk(address[])": {
+					"notice": "Birden fazla adresi whitelist'e ekler"
+				},
+				"burnPendingTokens()": {
+					"notice": "Bekleyen tokenları yakar"
+				},
+				"buyTokensPreSale(uint256,string)": {
+					"notice": "Kullanıcıların Pre-Sale döneminde token satın almasına olanak tanır"
+				},
+				"buyTokensPrivateSale(uint256,string)": {
+					"notice": "Kullanıcıların Private Sale döneminde token satın almasına olanak tanır"
+				},
+				"completePreSale()": {
+					"notice": "Pre-Sale dönemini tamamlar"
+				},
+				"completePrivateSale()": {
+					"notice": "Private Sale dönemini tamamlar"
+				},
+				"constructor": {
+					"notice": "Kontrat kurucusu, toplam token miktarını mint ederek belirli bir dağıtım yapar."
+				},
+				"emergencyPause()": {
+					"notice": "Kontratı acil durumlarda duraklatmak için kullanılır"
+				},
+				"isWhitelisted(address)": {
+					"notice": "Bir adresin whitelist'te olup olmadığını kontrol eder"
+				},
+				"releaseVestedTokens()": {
+					"notice": "Stake edilen tokenların vesting döneminden sonra serbest bırakılmasını sağlar"
+				},
+				"removeFromWhitelist(address)": {
+					"notice": "Bir adresi whitelist'ten çıkarır"
+				},
+				"stakeTokens(uint256)": {
+					"notice": "Kullanıcıların tokenlarını stake etmelerini sağlar"
+				},
+				"unpause()": {
+					"notice": "Kontratı duraklatılmış durumdan çıkarır"
+				},
+				"withdrawFunds()": {
+					"notice": "Sahip tarafından kontrattaki fonları çekmek için kullanılır"
+				},
+				"withdrawTokens(uint256)": {
+					"notice": "Sahip tarafından kontrattaki tokenları çekmek için kullanılır"
+				}
+			},
+			"notice": "Bu kontrat, Bettoken (BETT) adında bir ERC20 token'ını yönetir ve çeşitli token dağıtım, stake, vesting ve satış işlevleri sunar.",
 			"version": 1
 		}
 	},
@@ -1875,11 +1989,11 @@
 	},
 	"sources": {
 		"contracts/bettoken.sol": {
-			"keccak256": "0xd3a7c8a5dd2ee49046cfaa3ca770a33dd8c75366fd5f9131025b4cd24485fa7c",
+			"keccak256": "0x3d67ffb13d25ab39abb81fbcd0022f819bfda592e0b9283d0ba7321d7762bc1b",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://7b88bda806d6bc522e79f344dde67fd230e7b258037bb98c22b229a8752f4835",
-				"dweb:/ipfs/QmbPsY4dDGuoouKzNnicarGE8jQZbCTj8tXLU3bT9e7CJS"
+				"bzz-raw://0e51376eb45753a810ecae31d0798c929c5c1eb187387f975ae0cdf41fa9b87f",
+				"dweb:/ipfs/Qmc66JMDbKPuiFc6bj5gXPyGNszkbSw7CmzXufqfCkQfvs"
 			]
 		},
 		"https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/access/Ownable.sol": {

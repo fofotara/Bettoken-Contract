@@ -1,0 +1,46 @@
+{
+	"compiler": {
+		"version": "0.8.26+commit.8a97fa7a"
+	},
+	"language": "Solidity",
+	"output": {
+		"abi": [],
+		"devdoc": {
+			"details": "Standard signed math utilities missing in the Solidity language.",
+			"kind": "dev",
+			"methods": {},
+			"version": 1
+		},
+		"userdoc": {
+			"kind": "user",
+			"methods": {},
+			"version": 1
+		}
+	},
+	"settings": {
+		"compilationTarget": {
+			"contracts/bettoken_flattened.sol": "SignedMath"
+		},
+		"evmVersion": "istanbul",
+		"libraries": {},
+		"metadata": {
+			"bytecodeHash": "ipfs"
+		},
+		"optimizer": {
+			"enabled": false,
+			"runs": 200
+		},
+		"remappings": []
+	},
+	"sources": {
+		"contracts/bettoken_flattened.sol": {
+			"keccak256": "0xdbbce8b9e2e7f8302e05fbcc9a251b20864512db17a8b3b80f3ebd4703d06892",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://185b13bf1f565ec495199df3cc223c5bf8e7215ab1f4ce81974c8b13d4fd5b02",
+				"dweb:/ipfs/QmWSRv3XaS8cppN84AKMzHCkFu166A4hFP42ap8XJseEAS"
+			]
+		}
+	},
+	"version": 1
+}
