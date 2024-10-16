@@ -1989,11 +1989,11 @@
 	},
 	"sources": {
 		"contracts/bettoken.sol": {
-			"keccak256": "0x3d67ffb13d25ab39abb81fbcd0022f819bfda592e0b9283d0ba7321d7762bc1b",
+			"keccak256": "0x53f049b9b483dc2a0e043e5c3aa3e3bb0619a9ecc61653728fb1a015f46e7352",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://0e51376eb45753a810ecae31d0798c929c5c1eb187387f975ae0cdf41fa9b87f",
-				"dweb:/ipfs/Qmc66JMDbKPuiFc6bj5gXPyGNszkbSw7CmzXufqfCkQfvs"
+				"bzz-raw://c283dabd667a03e4eedc71e8a19b0fff343b6ab4e5d4e343738acbe605a122d9",
+				"dweb:/ipfs/QmeMh6ZWKYrSz2fzoqf46FeXnzFQR491QYaXU3bYmR1oub"
 			]
 		},
 		"https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/access/Ownable.sol": {
